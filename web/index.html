@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة متابعة تقييم البرامج</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>لوحة متابعة تقييم البرامج وورش العمل والجلسات</h1>
+  <p>مؤشرات رضا المستفيدين ونسب المشاركة — تُحدَّث تلقائيًا مع كل استجابة جديدة</p>
+</header>
+
+<main>
+  <div class="toolbar">
+    <div id="lastUpdated" style="font-size:13px;color:var(--muted);"></div>
+    <button class="btn" id="refreshBtn">🔄 تحديث البيانات</button>
+  </div>
+
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">تفاصيل البرامج</h3>
+    <div id="tableContainer"><div class="loading-state">جاري تحميل البيانات...</div></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">المتوسط العام للرضا لكل برنامج</h3>
+    <canvas id="chartCanvas" height="110"></canvas>
+  </div>
+</main>
+
+<footer>نظام التقييم الإلكتروني الموحّد — IEC-Programs</footer>
+
+<script src="assets/config.js"></script>
+<script src="assets/dashboard.js"></script>
+</body>
+</html>
