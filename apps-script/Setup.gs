@@ -1,6 +1,5 @@
 /**
- * الإعداد الأولي: إنشاء الأوراق داخل ملف Google Sheets وتفعيل المشغّلات الزمنية.
- * شغّل setupSystem() مرة واحدة فقط بعد ربط هذا السكربت بملف Google Sheets.
+ * الإعداد الأولي: إنشاء الأوراق والنموذج المشترك. شغّل setupSystem() مرة واحدة فقط.
  */
 
 function setupSystem() {
@@ -8,14 +7,13 @@ function setupSystem() {
 
   ensureProgramsSheet_(ss);
   ensureResponsesSheet_(ss);
-  ensureDashboardSheet_(ss);
-  ensureTriggers_();
+  const form = ensureEvaluationForm_(ss);
 
   SpreadsheetApp.getUi().alert(
     'تم إعداد النظام بنجاح ✅\n\n' +
       'الخطوة التالية: من محرر Apps Script اضغط Deploy ← New deployment ← Web app،\n' +
-      'واختر Execute as: Me و Who has access: Anyone، ثم انسخ الرابط (Web App URL) وضعه في ملف web/assets/config.js في الواجهة.\n\n' +
-      'أضف بيانات برامجك في ورقة "' + CONFIG.SHEETS.PROGRAMS + '" وسيرسل النظام رابط التقييم تلقائيًا للمشاركين في تاريخ انتهاء كل برنامج.'
+      'اختر Execute as: Me و Who has access: Anyone، وانسخ رابط Web App وضعه في ملف docs/assets/config.js.\n\n' +
+      'بعدها أضف الورش من داخل التطبيق نفسه (زر "إضافة ورشة جديدة").'
   );
 }
 
@@ -28,13 +26,7 @@ function ensureProgramsSheet_(ss) {
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, CONFIG.PROGRAM_COLUMNS.length)
       .setFontWeight('bold').setBackground('#1c4587').setFontColor('#ffffff');
-    sheet.setColumnWidths(1, CONFIG.PROGRAM_COLUMNS.length, 160);
-    sheet.getRange('K2:K').setDataValidation(
-      SpreadsheetApp.newDataValidation()
-        .requireValueInList(['لم يُرسل', 'تم الإرسال'], true)
-        .setAllowInvalid(false)
-        .build()
-    );
+    sheet.setColumnWidths(1, CONFIG.PROGRAM_COLUMNS.length, 150);
   }
   return sheet;
 }
@@ -48,46 +40,72 @@ function ensureResponsesSheet_(ss) {
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, CONFIG.RESPONSE_COLUMNS.length)
       .setFontWeight('bold').setBackground('#a61c00').setFontColor('#ffffff');
-    sheet.setColumnWidths(1, CONFIG.RESPONSE_COLUMNS.length, 160);
+    sheet.setColumnWidths(1, CONFIG.RESPONSE_COLUMNS.length, 150);
   }
   return sheet;
 }
 
-function ensureDashboardSheet_(ss) {
-  let sheet = ss.getSheetByName(CONFIG.SHEETS.DASHBOARD);
-  if (!sheet) sheet = ss.insertSheet(CONFIG.SHEETS.DASHBOARD);
+/** ينشئ نموذج التقييم المشترك مرة واحدة فقط (يُعاد استخدامه واسمه يتغيّر لكل ورشة) */
+function ensureEvaluationForm_(ss) {
+  const props = PropertiesService.getScriptProperties();
+  const existingId = props.getProperty(CONFIG.PROP_FORM_ID);
 
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(CONFIG.DASHBOARD_COLUMNS);
-    sheet.setFrozenRows(1);
-    sheet.getRange(1, 1, 1, CONFIG.DASHBOARD_COLUMNS.length)
-      .setFontWeight('bold').setBackground('#0b8043').setFontColor('#ffffff');
-    sheet.setColumnWidths(1, CONFIG.DASHBOARD_COLUMNS.length, 170);
+  if (existingId) {
+    try {
+      return FormApp.openById(existingId);
+    } catch (e) {
+      // النموذج المخزّن لم يعد متاحًا، أنشئ نموذجًا جديدًا
+    }
   }
-  return sheet;
+
+  const form = FormApp.create('نموذج تقييم البرامج وورش العمل');
+  form.setDescription('نشكر لكم مشاركتكم. نرجو تعبئة هذا النموذج لتقييم الورشة.');
+  form.setCollectEmail(false);
+  form.setAllowResponseEdits(false);
+
+  form.addTextItem().setTitle(CONFIG.FORM_PROGRAM_ID_FIELD).setRequired(true);
+  form.addTextItem().setTitle(CONFIG.FORM_PROGRAM_NAME_FIELD).setRequired(true);
+
+  addScaleQuestion_(form, 'مدى رضاك عن محتوى الورشة');
+  addScaleQuestion_(form, 'مدى رضاك عن التنظيم واللوجستيات');
+  addScaleQuestion_(form, 'تقييمك للمدرب / مقدم الجلسة');
+  addScaleQuestion_(form, 'مدى تحقق أهداف الورشة');
+  addScaleQuestion_(form, 'مدى الاستفادة المتوقعة من تطبيق ما تم تعلمه');
+
+  form.addParagraphTextItem().setTitle('أبرز الملاحظات والمقترحات التطويرية').setRequired(false);
+
+  form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+  Utilities.sleep(1000);
+  renameResponsesSheet_(ss);
+
+  props.setProperty(CONFIG.PROP_FORM_ID, form.getId());
+  return form;
 }
 
-function ensureTriggers_() {
-  const existing = ScriptApp.getProjectTriggers().map(t => t.getHandlerFunction());
-
-  if (existing.indexOf('dailyCheckAndSendEvaluations') === -1) {
-    ScriptApp.newTrigger('dailyCheckAndSendEvaluations')
-      .timeBased().everyDays(1).atHour(8).create();
-  }
-  if (existing.indexOf('sendWeeklyReport') === -1) {
-    ScriptApp.newTrigger('sendWeeklyReport')
-      .timeBased().onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(7).create();
+function renameResponsesSheet_(ss) {
+  const target = ss.getSheetByName(CONFIG.SHEETS.RESPONSES);
+  const sheets = ss.getSheets();
+  for (const sh of sheets) {
+    const name = sh.getName();
+    if (name !== CONFIG.SHEETS.RESPONSES &&
+        (name.indexOf('Form Responses') === 0 || name.indexOf('استجابات النموذج') === 0)) {
+      if (target) ss.deleteSheet(target); // تفادي تكرار ورقة الاستجابات
+      sh.setName(CONFIG.SHEETS.RESPONSES);
+      sh.getRange(1, 1, 1, sh.getLastColumn())
+        .setFontWeight('bold').setBackground('#a61c00').setFontColor('#ffffff');
+      return;
+    }
   }
 }
 
-/** قائمة مخصصة تظهر عند فتح ملف الشيت (لإدارة النظام بدون فتح محرر السكربت) */
+function addScaleQuestion_(form, title) {
+  form.addScaleItem().setTitle(title).setBounds(1, 5)
+    .setLabels('غير راضٍ إطلاقًا', 'راضٍ تمامًا').setRequired(true);
+}
+
 function onOpen() {
   SpreadsheetApp.getUi()
-    .createMenu('نظام التقييم')
+    .createMenu('نظام إدارة الورش')
     .addItem('⚙️ إعداد النظام (مرة واحدة)', 'setupSystem')
-    .addSeparator()
-    .addItem('📤 إرسال رابط التقييم للصف المحدد الآن', 'sendEvaluationForSelectedRow')
-    .addItem('🔄 تحديث لوحة المتابعة الآن', 'refreshDashboard')
-    .addItem('📧 إرسال التقرير الدوري الآن', 'sendWeeklyReport')
     .addToUi();
 }

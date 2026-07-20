@@ -3,39 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة تقييم البرامج</title>
+<title>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</title>
 <link rel="stylesheet" href="assets/style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
 <body>
 
 <header class="app-header">
-  <h1>لوحة متابعة تقييم البرامج وورش العمل والجلسات</h1>
-  <p>مؤشرات رضا المستفيدين ونسب المشاركة — تُحدَّث تلقائيًا مع كل استجابة جديدة</p>
+  <h1>برامج وورش مركز الابتكار وريادة الأعمال</h1>
+  <p>إدارة الورش، وتوليد روابط التقييم، ومتابعة النتائج — كل شي في مكان واحد</p>
 </header>
 
 <main>
   <div class="toolbar">
-    <div id="lastUpdated" style="font-size:13px;color:var(--muted);"></div>
-    <button class="btn" id="refreshBtn">🔄 تحديث البيانات</button>
+    <div id="statusMsg" style="font-size:13px;color:var(--muted);"></div>
+    <button class="btn" id="addBtn">➕ إضافة ورشة جديدة</button>
   </div>
 
-  <div class="kpi-grid" id="kpiGrid"></div>
-
-  <div class="card">
-    <h3 style="margin-top:0;">تفاصيل البرامج</h3>
-    <div id="tableContainer"><div class="loading-state">جاري تحميل البيانات...</div></div>
-  </div>
-
-  <div class="card">
-    <h3 style="margin-top:0;">المتوسط العام للرضا لكل برنامج</h3>
-    <canvas id="chartCanvas" height="110"></canvas>
-  </div>
+  <div id="listContainer"><div class="loading-state">جاري تحميل الورش...</div></div>
 </main>
 
-<footer>نظام التقييم الإلكتروني الموحّد — IEC-Programs</footer>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>إضافة ورشة جديدة</h3>
+      <button class="icon-btn" id="closeModal">✕</button>
+    </div>
+    <div id="modalBody">
+      <form id="addForm">
+        <div class="form-row"><label>اسم الورشة</label><input type="text" id="f_name" required></div>
+        <div class="form-row"><label>وصف البرنامج</label><textarea id="f_description" rows="3"></textarea></div>
+        <div class="form-row two-col">
+          <div><label>التاريخ</label><input type="date" id="f_date" required></div>
+          <div><label>الوقت</label><input type="time" id="f_time" required></div>
+        </div>
+        <div class="form-row"><label>المدرب / مقدم الجلسة</label><input type="text" id="f_trainer" required></div>
+        <div class="form-row"><label>الفئة المستهدفة</label><input type="text" id="f_audience" required></div>
+        <div class="form-row two-col">
+          <div><label>عدد المشاركين</label><input type="number" id="f_participants" min="1" required></div>
+          <div><label>الجهة المنظمة</label><input type="text" id="f_organizer" required></div>
+        </div>
+        <div id="addFormError" class="error-state" style="display:none;"></div>
+        <button type="submit" class="btn" style="width:100%;">حفظ وإنشاء رابط التقييم</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</footer>
 
 <script src="assets/config.js"></script>
-<script src="assets/dashboard.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>
