@@ -54,7 +54,7 @@ const CONFIG = {
 
   // *** عدّل هذا بعد نشر الواجهة على GitHub Pages ***
   // مثال: https://username.github.io/IEC-Programs/web
-  FRONTEND_BASE_URL: 'https://REPLACE_ME.github.io/IEC-Programs/web',
+  FRONTEND_BASE_URL: 'https://REPLACE_ME.github.io/IEC-Programs',
 
   ADMIN_EMAIL: Session.getEffectiveUser().getEmail(),
 };
