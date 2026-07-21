@@ -109,3 +109,38 @@ function onOpen() {
     .addItem('⚙️ إعداد النظام (مرة واحدة)', 'setupSystem')
     .addToUi();
 }
+
+/**
+ * ترحيل: يضيف عمود "نوع النشاط" لورقة "الورش" الموجودة مسبقًا بدون فقدان أي بيانات قديمة.
+ * شغّلها مرة واحدة فقط من محرر Apps Script (زر Run) بعد إضافة حقل نوع النشاط للنظام.
+ * آمنة لو اشتغلت أكثر من مرة بالغلط — ما تكرر العمود لو مضاف مسبقًا.
+ */
+function migrateAddActivityTypeColumn_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.SHEETS.PROGRAMS);
+  if (!sheet) {
+    SpreadsheetApp.getUi().alert('ورقة "الورش" غير موجودة.');
+    return;
+  }
+
+  const headerRange = sheet.getRange(1, 1, 1, sheet.getLastColumn());
+  const headers = headerRange.getValues()[0];
+
+  if (headers.indexOf('نوع النشاط') !== -1) {
+    SpreadsheetApp.getUi().alert('عمود "نوع النشاط" موجود بالفعل، ما فيه داعي نضيفه مرة ثانية.');
+    return;
+  }
+
+  const nameColIndex = headers.indexOf('اسم الورشة'); // 0-based
+  if (nameColIndex === -1) {
+    SpreadsheetApp.getUi().alert('تعذّر إيجاد عمود "اسم الورشة" بالورقة.');
+    return;
+  }
+
+  const insertBeforeCol = nameColIndex + 2; // العمود مباشرة بعد "اسم الورشة" (1-based)
+  sheet.insertColumnBefore(insertBeforeCol);
+  sheet.getRange(1, insertBeforeCol).setValue('نوع النشاط')
+    .setFontWeight('bold').setBackground('#1c4587').setFontColor('#ffffff');
+
+  SpreadsheetApp.getUi().alert('تمام ✅ تمت إضافة عمود "نوع النشاط" بنجاح، وكل الورش القديمة محفوظة زي ما هي.');
+}
