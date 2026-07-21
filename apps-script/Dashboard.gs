@@ -200,3 +200,79 @@ function deleteResponsesForWorkshop_(id) {
     }
   }
 }
+
+/**
+ * بيانات صفحة "التقارير والتحليلات": مؤشرات عامة + تحليل حسب المدرب (حتى لو تكرر
+ * بعدة ورش يجمع كل نتائجه) + تحليل حسب نوع النشاط + أحدث الملاحظات من كل الورش.
+ */
+function getReportsData_() {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+
+  let totalParticipants = 0;
+  programs.forEach(p => {
+    const n = Number(p.data['عدد المشاركين']);
+    if (!isNaN(n)) totalParticipants += n;
+  });
+
+  const overallStats = computeStats_(responses);
+
+  // تحليل حسب المدرب
+  const trainerMap = {};
+  programs.forEach(p => {
+    const trainer = p.data['المدرب'] || 'غير محدد';
+    const id = String(p.data['المعرف']);
+    const participants = Number(p.data['عدد المشاركين']) || 0;
+    if (!trainerMap[trainer]) trainerMap[trainer] = { ids: [], workshopCount: 0, totalParticipants: 0 };
+    trainerMap[trainer].ids.push(id);
+    trainerMap[trainer].workshopCount += 1;
+    trainerMap[trainer].totalParticipants += participants;
+  });
+
+  const byTrainer = Object.keys(trainerMap).map(trainer => {
+    const info = trainerMap[trainer];
+    const trainerResponses = responses.filter(r => info.ids.indexOf(String(r.programId)) !== -1);
+    const stats = computeStats_(trainerResponses);
+    return {
+      trainer: trainer,
+      workshopCount: info.workshopCount,
+      totalParticipants: info.totalParticipants,
+      responseCount: stats.count,
+      avgOverall: stats.avgOverall,
+    };
+  }).sort((a, b) => (b.avgOverall || 0) - (a.avgOverall || 0));
+
+  // تحليل حسب نوع النشاط
+  const typeMap = {};
+  programs.forEach(p => {
+    const type = p.data['نوع النشاط'] || 'غير محدد';
+    const id = String(p.data['المعرف']);
+    if (!typeMap[type]) typeMap[type] = { ids: [], workshopCount: 0 };
+    typeMap[type].ids.push(id);
+    typeMap[type].workshopCount += 1;
+  });
+
+  const byType = Object.keys(typeMap).map(type => {
+    const info = typeMap[type];
+    const typeResponses = responses.filter(r => info.ids.indexOf(String(r.programId)) !== -1);
+    const stats = computeStats_(typeResponses);
+    return { type: type, workshopCount: info.workshopCount, avgOverall: stats.avgOverall };
+  }).sort((a, b) => b.workshopCount - a.workshopCount);
+
+  // أحدث الملاحظات من كل الورش (الأحدث أولًا)
+  const recentComments = responses
+    .filter(r => r.notes && String(r.notes).trim() !== '')
+    .map(r => ({ text: r.notes, workshopName: r.programName, date: r.timestamp }))
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 20);
+
+  return {
+    totalWorkshops: programs.length,
+    totalParticipants: totalParticipants,
+    totalResponses: responses.length,
+    avgOverall: overallStats.avgOverall,
+    byTrainer: byTrainer,
+    byType: byType,
+    recentComments: recentComments,
+  };
+}
