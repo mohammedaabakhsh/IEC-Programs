@@ -35,6 +35,7 @@
     let html = '<div class="workshop-grid">';
     workshops.forEach(w => {
       html += '<a class="workshop-card" href="workshop.html?id=' + encodeURIComponent(w.id) + '">' +
+        (w.type ? '<span class="type-chip">' + escapeHtml_(w.type) + '</span>' : '') +
         '<h4>' + escapeHtml_(w.name) + '</h4>' +
         '<div class="meta">📅 ' + escapeHtml_(w.date || '—') + (w.time ? ' — ' + escapeHtml_(w.time) : '') + '<br>👤 ' + escapeHtml_(w.trainer || '—') + '</div>' +
         '<div class="stats-row">' +
@@ -74,6 +75,7 @@
     const payload = {
       action: 'createWorkshop',
       name: document.getElementById('f_name').value.trim(),
+      type: document.getElementById('f_type').value,
       description: document.getElementById('f_description').value.trim(),
       date: document.getElementById('f_date').value,
       time: document.getElementById('f_time').value,

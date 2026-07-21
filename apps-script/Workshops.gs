@@ -3,7 +3,7 @@
  */
 
 function createWorkshop_(body) {
-  const required = ['name', 'date', 'time', 'trainer', 'audience', 'participants', 'organizer'];
+  const required = ['name', 'type', 'date', 'time', 'trainer', 'audience', 'participants', 'organizer'];
   for (const field of required) {
     if (body[field] === undefined || body[field] === null || String(body[field]).trim() === '') {
       return { ok: false, error: 'حقل مفقود: ' + field };
@@ -16,6 +16,7 @@ function createWorkshop_(body) {
   sheet.appendRow([
     id,
     body.name,
+    body.type,
     body.description || '',
     body.date,
     body.time,
@@ -54,7 +55,7 @@ function updateWorkshop_(body) {
   const match = findProgramById_(body.id);
   if (!match) return { ok: false, error: 'الورشة غير موجودة' };
 
-  const required = ['name', 'date', 'time', 'trainer', 'audience', 'participants', 'organizer'];
+  const required = ['name', 'type', 'date', 'time', 'trainer', 'audience', 'participants', 'organizer'];
   for (const field of required) {
     if (body[field] === undefined || body[field] === null || String(body[field]).trim() === '') {
       return { ok: false, error: 'حقل مفقود: ' + field };
@@ -65,6 +66,7 @@ function updateWorkshop_(body) {
   const rowNumber = match.rowNumber;
 
   sheet.getRange(rowNumber, programColIndex_('اسم الورشة') + 1).setValue(body.name);
+  sheet.getRange(rowNumber, programColIndex_('نوع النشاط') + 1).setValue(body.type);
   sheet.getRange(rowNumber, programColIndex_('وصف البرنامج') + 1).setValue(body.description || '');
   sheet.getRange(rowNumber, programColIndex_('التاريخ') + 1).setValue(body.date);
   sheet.getRange(rowNumber, programColIndex_('الوقت') + 1).setValue(body.time);

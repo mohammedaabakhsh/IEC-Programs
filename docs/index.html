@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -34,6 +36,14 @@
     <div id="modalBody">
       <form id="addForm">
         <div class="form-row"><label>اسم الورشة</label><input type="text" id="f_name" required></div>
+        <div class="form-row"><label>نوع النشاط</label>
+          <select id="f_type" required>
+            <option value="">اختر النوع</option>
+            <option>ورشة عمل</option>
+            <option>برنامج</option>
+            <option>جلسة</option>
+          </select>
+        </div>
         <div class="form-row"><label>وصف البرنامج</label><textarea id="f_description" rows="3"></textarea></div>
         <div class="form-row two-col">
           <div><label>التاريخ</label><input type="date" id="f_date" required></div>

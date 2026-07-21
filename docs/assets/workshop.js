@@ -43,6 +43,9 @@
 
   function render(w) {
     pageTitle.textContent = w.name;
+    if (w.type) {
+      pageTitle.innerHTML = '<span class="type-chip" style="vertical-align:middle;margin-left:8px;">' + escapeHtml_(w.type) + '</span>' + escapeHtml_(w.name);
+    }
     const s = w.stats;
 
     let html = '<div class="kpi-grid">' +
@@ -60,6 +63,7 @@
       '<button class="btn" id="deleteBtn" type="button" style="background:var(--danger);">🗑 حذف</button>' +
       '</div></div>' +
       '<table class="info-table" style="margin-top:12px;">' +
+      infoRow('نوع النشاط', w.type) +
       infoRow('الوصف', w.description) +
       infoRow('التاريخ', w.date) +
       infoRow('الوقت', w.time) +
@@ -137,6 +141,7 @@
 
   function openEditModal() {
     document.getElementById('e_name').value = currentWorkshop.name || '';
+    document.getElementById('e_type').value = currentWorkshop.type || '';
     document.getElementById('e_description').value = currentWorkshop.description || '';
     document.getElementById('e_date').value = currentWorkshop.date || '';
     document.getElementById('e_time').value = currentWorkshop.time || '';
@@ -164,6 +169,7 @@
       action: 'updateWorkshop',
       id: currentWorkshop.id,
       name: document.getElementById('e_name').value.trim(),
+      type: document.getElementById('e_type').value,
       description: document.getElementById('e_description').value.trim(),
       date: document.getElementById('e_date').value,
       time: document.getElementById('e_time').value,

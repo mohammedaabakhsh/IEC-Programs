@@ -141,6 +141,7 @@ function getWorkshopsSummary_() {
     return {
       id: id,
       name: data['اسم الورشة'],
+      type: data['نوع النشاط'],
       date: data['التاريخ'],
       time: data['الوقت'],
       trainer: data['المدرب'],
@@ -167,6 +168,7 @@ function getWorkshopDetail_(id) {
   return {
     id: data['المعرف'],
     name: data['اسم الورشة'],
+    type: data['نوع النشاط'],
     description: data['وصف البرنامج'],
     date: data['التاريخ'],
     time: data['الوقت'],
