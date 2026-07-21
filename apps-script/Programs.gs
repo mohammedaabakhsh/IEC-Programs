@@ -17,7 +17,20 @@ function getProgramsSheet_() {
 
 function rowToProgramObject_(row) {
   const obj = {};
-  CONFIG.PROGRAM_COLUMNS.forEach((name, i) => { obj[name] = row[i]; });
+  CONFIG.PROGRAM_COLUMNS.forEach((name, i) => {
+    let v = row[i];
+    if (v instanceof Date) {
+      // جوجل شيت يخزن خلايا التاريخ/الوقت ككائن Date، نحوّلها لنص واضح قبل إرجاعها للتطبيق
+      if (name === 'التاريخ') {
+        v = Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+      } else if (name === 'الوقت') {
+        v = Utilities.formatDate(v, Session.getScriptTimeZone(), 'HH:mm');
+      } else {
+        v = Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+      }
+    }
+    obj[name] = v;
+  });
   return obj;
 }
 
