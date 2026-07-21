@@ -13,7 +13,15 @@ const CERT_CONFIG = {
   NAME_FONT_SIZE: 34,
   NAME_FONT_COLOR: '#4bbf82',
   PROP_CERT_TEMPLATE_ID: 'CERT_TEMPLATE_ID',
+  FOLDER_NAME: 'شهادات المشاركين',
 };
+
+/** يجيب مجلد "شهادات المشاركين" بجوجل درايف، وينشئه أول مرة لو مو موجود */
+function getCertificatesFolder_() {
+  const folders = DriveApp.getFoldersByName(CERT_CONFIG.FOLDER_NAME);
+  if (folders.hasNext()) return folders.next();
+  return DriveApp.createFolder(CERT_CONFIG.FOLDER_NAME);
+}
 
 /** ينشئ قالب الشهادة في Google Slides مرة واحدة فقط (يُعاد استخدامه لاحقًا) */
 function ensureCertificateTemplate_() {
@@ -67,6 +75,16 @@ function ensureCertificateTemplate_() {
     .setForegroundColor(CERT_CONFIG.NAME_FONT_COLOR);
   textRange.getParagraphStyle().setParagraphAlignment(SlidesApp.ParagraphAlignment.CENTER);
 
+  // انقل ملف القالب لمجلد "شهادات المشاركين" بدل ما يضل بجذر Drive
+  try {
+    const folder = getCertificatesFolder_();
+    const file = DriveApp.getFileById(presentation.getId());
+    folder.addFile(file);
+    DriveApp.getRootFolder().removeFile(file);
+  } catch (err) {
+    Logger.log('تعذّر نقل ملف القالب للمجلد: ' + err);
+  }
+
   props.setProperty(CERT_CONFIG.PROP_CERT_TEMPLATE_ID, presentation.getId());
   return presentation.getId();
 }
@@ -98,9 +116,19 @@ function generateCertificate_(name) {
     }
 
     const pdfBlob = response.getBlob();
+    const filename = 'شهادة تقدير - ' + name + '.pdf';
+
+    // احفظ نسخة أرشيفية من الشهادة بمجلد "شهادات المشاركين" بجوجل درايف
+    try {
+      const folder = getCertificatesFolder_();
+      folder.createFile(pdfBlob.setName(filename));
+    } catch (err) {
+      Logger.log('تعذّر حفظ نسخة أرشيفية من الشهادة: ' + err);
+    }
+
     const base64 = Utilities.base64Encode(pdfBlob.getBytes());
 
-    return { ok: true, pdfBase64: base64, filename: 'شهادة تقدير - ' + name + '.pdf' };
+    return { ok: true, pdfBase64: base64, filename: filename };
   } catch (err) {
     return { ok: false, error: String(err) };
   } finally {
