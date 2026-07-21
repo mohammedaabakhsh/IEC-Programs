@@ -98,5 +98,7 @@ function deleteWorkshop_(id) {
   const sheet = getProgramsSheet_();
   sheet.deleteRow(match.rowNumber);
 
+  deleteResponsesForWorkshop_(id);
+
   return { ok: true };
 }

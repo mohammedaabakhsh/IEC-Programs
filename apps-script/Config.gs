@@ -39,6 +39,7 @@ const CONFIG = {
   FORM_PROGRAM_NAME_FIELD: 'اسم الورشة',
 
   PROP_FORM_ID: 'EVAL_FORM_ID',
+  PROP_NEXT_ID: 'NEXT_PROGRAM_ID',
 
   QR_API_BASE: 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=',
 };

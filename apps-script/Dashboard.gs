@@ -127,3 +127,22 @@ function getWorkshopDetail_(id) {
     stats: stats,
   };
 }
+
+/** يحذف كل استجابات ورشة معيّنة من ورقة "استجابات التقييم" (يُستدعى عند حذف الورشة نفسها) */
+function deleteResponsesForWorkshop_(id) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.SHEETS.RESPONSES);
+  if (!sheet) return;
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  const idCol = RESPONSE_COL.PROGRAM_ID + 1;
+  const ids = sheet.getRange(2, idCol, lastRow - 1, 1).getValues();
+
+  for (let i = ids.length - 1; i >= 0; i--) {
+    if (String(ids[i][0]) === String(id)) {
+      sheet.deleteRow(i + 2);
+    }
+  }
+}
