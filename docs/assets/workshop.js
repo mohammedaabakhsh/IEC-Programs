@@ -48,8 +48,8 @@
     let html = '<div class="kpi-grid">' +
       kpi(s.count, 'عدد الردود') +
       kpi(fmtAvg(s.avgOverall), 'المتوسط العام') +
-      kpi(fmtAvg(s.avgTrainer), 'تقييم المدرب') +
-      kpi(fmtAvg(s.avgOrganization), 'تقييم التنظيم') +
+      kpi(fmtAvg(s.avgContentCategory), 'محور المحتوى') +
+      kpi(fmtAvg(s.avgTrainerCategory), 'محور المدرب') +
       '</div>';
 
     html += '<div class="card">' +
@@ -77,12 +77,24 @@
         '</div>';
     }
 
-    html += '<div class="card"><h3 style="margin-top:0;">إحصاءات تفصيلية</h3><table class="info-table">' +
-      infoRow('متوسط الرضا عن المحتوى', fmtAvg(s.avgContent)) +
-      infoRow('متوسط الرضا عن التنظيم', fmtAvg(s.avgOrganization)) +
-      infoRow('متوسط تقييم المدرب', fmtAvg(s.avgTrainer)) +
-      infoRow('متوسط تحقق الأهداف', fmtAvg(s.avgGoals)) +
-      infoRow('متوسط الاستفادة المتوقعة', fmtAvg(s.avgBenefit)) +
+    html += '<div class="card"><h3 style="margin-top:0;">محور تقييم محتوى الورشة</h3><table class="info-table">' +
+      infoRow('وضوح أهداف الورشة', fmtAvg(s.avgGoalsClarity)) +
+      infoRow('تنظيم وتسلسل المحتوى', fmtAvg(s.avgContentStructure)) +
+      infoRow('ملاءمة الموضوع', fmtAvg(s.avgTopicRelevance)) +
+      infoRow('جودة المادة العلمية', fmtAvg(s.avgMaterialQuality)) +
+      infoRow('متوسط المحور', fmtAvg(s.avgContentCategory)) +
+      '</table></div>';
+
+    html += '<div class="card"><h3 style="margin-top:0;">محور تقييم المدرب</h3><table class="info-table">' +
+      infoRow('وضوح الشرح', fmtAvg(s.avgTrainerClarity)) +
+      infoRow('إيصال المعلومات', fmtAvg(s.avgTrainerCommunication)) +
+      infoRow('التفاعل مع المشاركين', fmtAvg(s.avgTrainerInteraction)) +
+      infoRow('إدارة الوقت', fmtAvg(s.avgTrainerTimeMgmt)) +
+      infoRow('متوسط المحور', fmtAvg(s.avgTrainerCategory)) +
+      '</table></div>';
+
+    html += '<div class="card"><h3 style="margin-top:0;">التقييم العام</h3><table class="info-table">' +
+      infoRow('تقييمكم العام للورشة', fmtAvg(s.avgGeneral)) +
       '</table></div>';
 
     html += '<div class="card"><h3 style="margin-top:0;">الملاحظات والمقترحات (' + s.comments.length + ')</h3>';

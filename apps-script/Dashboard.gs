@@ -1,17 +1,24 @@
 /**
  * حساب الإحصاءات والتقارير لكل ورشة من ورقة "استجابات التقييم".
+ * ترتيب الأعمدة هنا مطابق لترتيب أسئلة نموذج التقييم (Config.gs > RESPONSE_COLUMNS).
  */
 
 const RESPONSE_COL = {
   TIMESTAMP: 0,
-  PROGRAM_ID: 1,
-  PROGRAM_NAME: 2,
-  CONTENT: 3,
-  ORGANIZATION: 4,
-  TRAINER: 5,
-  GOALS: 6,
-  BENEFIT: 7,
-  NOTES: 8,
+  PROGRAM_NAME: 1,
+  FULL_NAME: 2,
+  EMAIL: 3,
+  GOALS_CLARITY: 4,       // وضوح أهداف الورشة
+  CONTENT_STRUCTURE: 5,   // تنظيم وتسلسل المحتوى
+  TOPIC_RELEVANCE: 6,     // ملاءمة الموضوع
+  MATERIAL_QUALITY: 7,    // جودة المادة العلمية
+  TRAINER_CLARITY: 8,     // وضوح الشرح
+  TRAINER_COMMUNICATION: 9, // إيصال المعلومات
+  TRAINER_INTERACTION: 10,  // التفاعل مع المشاركين
+  TRAINER_TIME_MGMT: 11,    // إدارة الوقت
+  GENERAL_RATING: 12,       // تقييمكم العام للورشة
+  NOTES: 13,                // ملاحظاتكم ومقترحاتكم
+  PROGRAM_ID: 14,           // معرف الورشة (آخر عمود، حقل مخفي تلقائي)
 };
 
 /** يعيد كل صفوف ورقة الاستجابات كمصفوفة كائنات */
@@ -30,39 +37,84 @@ function getAllResponses_() {
     timestamp: row[RESPONSE_COL.TIMESTAMP],
     programId: row[RESPONSE_COL.PROGRAM_ID],
     programName: row[RESPONSE_COL.PROGRAM_NAME],
-    content: Number(row[RESPONSE_COL.CONTENT]),
-    organization: Number(row[RESPONSE_COL.ORGANIZATION]),
-    trainer: Number(row[RESPONSE_COL.TRAINER]),
-    goals: Number(row[RESPONSE_COL.GOALS]),
-    benefit: Number(row[RESPONSE_COL.BENEFIT]),
+    fullName: row[RESPONSE_COL.FULL_NAME],
+    email: row[RESPONSE_COL.EMAIL],
+    goalsClarity: Number(row[RESPONSE_COL.GOALS_CLARITY]),
+    contentStructure: Number(row[RESPONSE_COL.CONTENT_STRUCTURE]),
+    topicRelevance: Number(row[RESPONSE_COL.TOPIC_RELEVANCE]),
+    materialQuality: Number(row[RESPONSE_COL.MATERIAL_QUALITY]),
+    trainerClarity: Number(row[RESPONSE_COL.TRAINER_CLARITY]),
+    trainerCommunication: Number(row[RESPONSE_COL.TRAINER_COMMUNICATION]),
+    trainerInteraction: Number(row[RESPONSE_COL.TRAINER_INTERACTION]),
+    trainerTimeMgmt: Number(row[RESPONSE_COL.TRAINER_TIME_MGMT]),
+    generalRating: Number(row[RESPONSE_COL.GENERAL_RATING]),
     notes: row[RESPONSE_COL.NOTES],
   }));
 }
 
 function computeStats_(responses) {
-  const stats = { count: responses.length, content: [], organization: [], trainer: [], goals: [], benefit: [], overall: [], comments: [] };
+  const dims = {
+    goalsClarity: [], contentStructure: [], topicRelevance: [], materialQuality: [],
+    trainerClarity: [], trainerCommunication: [], trainerInteraction: [], trainerTimeMgmt: [],
+    generalRating: [], overall: [],
+  };
+  const comments = [];
 
   responses.forEach(r => {
-    pushIfNumber_(stats.content, r.content);
-    pushIfNumber_(stats.organization, r.organization);
-    pushIfNumber_(stats.trainer, r.trainer);
-    pushIfNumber_(stats.goals, r.goals);
-    pushIfNumber_(stats.benefit, r.benefit);
-    [r.content, r.organization, r.trainer, r.goals, r.benefit].forEach(v => pushIfNumber_(stats.overall, v));
+    pushIfNumber_(dims.goalsClarity, r.goalsClarity);
+    pushIfNumber_(dims.contentStructure, r.contentStructure);
+    pushIfNumber_(dims.topicRelevance, r.topicRelevance);
+    pushIfNumber_(dims.materialQuality, r.materialQuality);
+    pushIfNumber_(dims.trainerClarity, r.trainerClarity);
+    pushIfNumber_(dims.trainerCommunication, r.trainerCommunication);
+    pushIfNumber_(dims.trainerInteraction, r.trainerInteraction);
+    pushIfNumber_(dims.trainerTimeMgmt, r.trainerTimeMgmt);
+    pushIfNumber_(dims.generalRating, r.generalRating);
+    [
+      r.goalsClarity, r.contentStructure, r.topicRelevance, r.materialQuality,
+      r.trainerClarity, r.trainerCommunication, r.trainerInteraction, r.trainerTimeMgmt,
+      r.generalRating,
+    ].forEach(v => pushIfNumber_(dims.overall, v));
+
     if (r.notes && String(r.notes).trim() !== '') {
-      stats.comments.push({ text: r.notes, date: r.timestamp });
+      comments.push({ text: r.notes, date: r.timestamp });
     }
   });
 
+  const avgGoalsClarity = avg_(dims.goalsClarity);
+  const avgContentStructure = avg_(dims.contentStructure);
+  const avgTopicRelevance = avg_(dims.topicRelevance);
+  const avgMaterialQuality = avg_(dims.materialQuality);
+  const avgTrainerClarity = avg_(dims.trainerClarity);
+  const avgTrainerCommunication = avg_(dims.trainerCommunication);
+  const avgTrainerInteraction = avg_(dims.trainerInteraction);
+  const avgTrainerTimeMgmt = avg_(dims.trainerTimeMgmt);
+  const avgGeneral = avg_(dims.generalRating);
+
   return {
-    count: stats.count,
-    avgContent: avg_(stats.content),
-    avgOrganization: avg_(stats.organization),
-    avgTrainer: avg_(stats.trainer),
-    avgGoals: avg_(stats.goals),
-    avgBenefit: avg_(stats.benefit),
-    avgOverall: avg_(stats.overall),
-    comments: stats.comments,
+    count: responses.length,
+
+    // محور تقييم محتوى الورشة
+    avgGoalsClarity: avgGoalsClarity,
+    avgContentStructure: avgContentStructure,
+    avgTopicRelevance: avgTopicRelevance,
+    avgMaterialQuality: avgMaterialQuality,
+    avgContentCategory: avg_([avgGoalsClarity, avgContentStructure, avgTopicRelevance, avgMaterialQuality].filter(v => v !== null)),
+
+    // محور تقييم المدرب
+    avgTrainerClarity: avgTrainerClarity,
+    avgTrainerCommunication: avgTrainerCommunication,
+    avgTrainerInteraction: avgTrainerInteraction,
+    avgTrainerTimeMgmt: avgTrainerTimeMgmt,
+    avgTrainerCategory: avg_([avgTrainerClarity, avgTrainerCommunication, avgTrainerInteraction, avgTrainerTimeMgmt].filter(v => v !== null)),
+
+    // التقييم العام
+    avgGeneral: avgGeneral,
+
+    // المتوسط العام الكلي (كل الأسئلة الرقمية التسعة مجتمعة)
+    avgOverall: avg_(dims.overall),
+
+    comments: comments,
   };
 }
 
