@@ -85,7 +85,19 @@ function generateCertificate_(name) {
     presentation.getSlides()[0].replaceAllText('{{NAME}}', name);
     presentation.saveAndClose();
 
-    const pdfBlob = DriveApp.getFileById(copyFile.getId()).getAs('application/pdf');
+    // نصدّر عبر رابط تصدير Slides المباشر بدل getAs() لأنه يعطي مطابقة أدق لحجم
+    // الصفحة الفعلي بدون هوامش بيضاء إضافية حول المحتوى.
+    const exportUrl = 'https://docs.google.com/presentation/d/' + copyFile.getId() + '/export/pdf';
+    const response = UrlFetchApp.fetch(exportUrl, {
+      headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true,
+    });
+
+    if (response.getResponseCode() !== 200) {
+      throw new Error('فشل تصدير PDF: ' + response.getResponseCode());
+    }
+
+    const pdfBlob = response.getBlob();
     const base64 = Utilities.base64Encode(pdfBlob.getBytes());
 
     return { ok: true, pdfBase64: base64, filename: 'شهادة تقدير - ' + name + '.pdf' };
