@@ -67,7 +67,8 @@ function nextProgramId_() {
       const idCol = programColIndex_('المعرف') + 1;
       const ids = sheet.getRange(2, idCol, lastRow - 1, 1).getValues();
       ids.forEach(r => {
-        const n = parseInt(r[0], 10);
+        // نشيل أي بادئة نصية (مثل IEC:) قبل التحويل لرقم، عشان يتوافق مع الورش القديمة والجديدة
+        const n = parseInt(String(r[0]).replace(/[^0-9]/g, ''), 10);
         if (!isNaN(n) && n > maxId) maxId = n;
       });
     }
@@ -75,7 +76,7 @@ function nextProgramId_() {
   }
 
   props.setProperty(CONFIG.PROP_NEXT_ID, String(next + 1));
-  return next;
+  return 'IEC:' + next;
 }
 
 /** يبني رابط نموذج تقييم معبّأ مسبقًا بمعرف واسم الورشة */

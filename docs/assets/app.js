@@ -37,7 +37,7 @@
       html += '<a class="workshop-card" href="workshop.html?id=' + encodeURIComponent(w.id) + '">' +
         (w.type ? '<span class="type-chip">' + escapeHtml_(w.type) + '</span>' : '') +
         '<h4>' + escapeHtml_(w.name) + '</h4>' +
-        '<div class="meta">📅 ' + escapeHtml_(w.date || '—') + (w.time ? ' — ' + escapeHtml_(w.time) : '') + '<br>👤 ' + escapeHtml_(w.trainer || '—') + '</div>' +
+        '<div class="meta">🆔 ' + escapeHtml_(w.id) + '<br>📅 ' + escapeHtml_(w.date || '—') + (w.time ? ' — ' + escapeHtml_(w.time) : '') + '<br>👤 ' + escapeHtml_(w.trainer || '—') + '</div>' +
         '<div class="stats-row">' +
         '<span class="stat-pill">الردود: ' + w.responseCount + '</span>' +
         '<span class="stat-pill">المتوسط: ' + (w.avgOverall !== null && w.avgOverall !== undefined ? w.avgOverall : '—') + ' / 5</span>' +

@@ -63,6 +63,7 @@
       '<button class="btn" id="deleteBtn" type="button" style="background:var(--danger);">🗑 حذف</button>' +
       '</div></div>' +
       '<table class="info-table" style="margin-top:12px;">' +
+      infoRow('المعرف', w.id) +
       infoRow('نوع النشاط', w.type) +
       infoRow('الوصف', w.description) +
       infoRow('التاريخ', w.date) +
