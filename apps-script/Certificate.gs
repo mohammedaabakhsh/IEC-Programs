@@ -38,23 +38,31 @@ function ensureCertificateTemplate_() {
     Logger.log('تعذّر ضبط أبعاد الصفحة: ' + err);
   }
 
+  // اقرأ الأبعاد الفعلية للصفحة بعد المحاولة (احتياطًا لو Slides ما دعم تغيير الحجم)
+  // وامل الصورة على كامل المساحة الفعلية دائمًا لتفادي أي قص عند التصدير.
+  const actualWidth = presentation.getPageWidth();
+  const actualHeight = presentation.getPageHeight();
+  const scaleX = actualWidth / CERT_CONFIG.PAGE_WIDTH_PT;
+  const scaleY = actualHeight / CERT_CONFIG.PAGE_HEIGHT_PT;
+
   const slide = presentation.getSlides()[0];
 
   slide.getShapes().forEach(sh => { try { sh.remove(); } catch (e) {} });
 
-  slide.insertImage(
-    CERT_CONFIG.BACKGROUND_IMAGE_URL, 0, 0,
-    CERT_CONFIG.PAGE_WIDTH_PT, CERT_CONFIG.PAGE_HEIGHT_PT
-  );
+  slide.insertImage(CERT_CONFIG.BACKGROUND_IMAGE_URL, 0, 0, actualWidth, actualHeight);
 
-  const top = CERT_CONFIG.PAGE_HEIGHT_PT - CERT_CONFIG.NAME_Y_FROM_BOTTOM_PT - (CERT_CONFIG.NAME_BOX_HEIGHT_PT / 2);
-  const left = (CERT_CONFIG.PAGE_WIDTH_PT - CERT_CONFIG.NAME_BOX_WIDTH_PT) / 2;
+  const nameBoxWidth = CERT_CONFIG.NAME_BOX_WIDTH_PT * scaleX;
+  const nameBoxHeight = CERT_CONFIG.NAME_BOX_HEIGHT_PT * scaleY;
+  const nameYFromBottom = CERT_CONFIG.NAME_Y_FROM_BOTTOM_PT * scaleY;
 
-  const nameBox = slide.insertTextBox('{{NAME}}', left, top, CERT_CONFIG.NAME_BOX_WIDTH_PT, CERT_CONFIG.NAME_BOX_HEIGHT_PT);
+  const top = actualHeight - nameYFromBottom - (nameBoxHeight / 2);
+  const left = (actualWidth - nameBoxWidth) / 2;
+
+  const nameBox = slide.insertTextBox('{{NAME}}', left, top, nameBoxWidth, nameBoxHeight);
   const textRange = nameBox.getText();
   textRange.getTextStyle()
     .setFontFamily('Amiri')
-    .setFontSize(CERT_CONFIG.NAME_FONT_SIZE)
+    .setFontSize(CERT_CONFIG.NAME_FONT_SIZE * Math.min(scaleX, scaleY))
     .setBold(true)
     .setForegroundColor(CERT_CONFIG.NAME_FONT_COLOR);
   textRange.getParagraphStyle().setParagraphAlignment(SlidesApp.ParagraphAlignment.CENTER);
