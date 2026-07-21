@@ -10,23 +10,38 @@
 </head>
 <body>
 
-<header class="app-header">
-  <h1>برامج وورش مركز الابتكار وريادة الأعمال</h1>
-  <p>إدارة الورش، وتوليد روابط التقييم، ومتابعة النتائج — كل شي في مكان واحد</p>
-</header>
-
-<main>
-  <div class="toolbar">
-    <div id="statusMsg" style="font-size:13px;color:var(--muted);"></div>
-    <div style="display:flex;gap:8px;">
-      <a href="reports.html" class="btn secondary" style="text-decoration:none;">📊 التقارير</a>
-      <a href="certificate.html" class="btn secondary" style="text-decoration:none;">🏅 توليد شهادة</a>
-      <button class="btn" id="addBtn">➕ إضافة ورشة جديدة</button>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">IEC</div>
+      <div><strong>مركز الابتكار</strong><span>وريادة الأعمال</span></div>
     </div>
-  </div>
+    <nav class="nav-list">
+      <a href="index.html" class="nav-item active"><span class="ic">🏠</span> الورش والبرامج</a>
+      <a href="reports.html" class="nav-item"><span class="ic">📊</span> التقارير والتحليلات</a>
+      <a href="certificate.html" class="nav-item"><span class="ic">🏅</span> توليد الشهادات</a>
+    </nav>
+    <div class="sidebar-foot">نظام إدارة برامج وورش<br>مركز الابتكار وريادة الأعمال</div>
+  </aside>
 
-  <div id="listContainer"><div class="loading-state">جاري تحميل الورش...</div></div>
-</main>
+  <main class="main-content">
+    <header class="app-header">
+      <h1>برامج وورش مركز الابتكار وريادة الأعمال</h1>
+      <p>إدارة الورش، وتوليد روابط التقييم، ومتابعة النتائج — كل شي في مكان واحد</p>
+    </header>
+
+    <div class="page-content">
+      <div class="toolbar">
+        <div id="statusMsg" style="font-size:13px;color:var(--muted);"></div>
+        <button class="btn" id="addBtn">➕ إضافة ورشة جديدة</button>
+      </div>
+
+      <div id="listContainer"><div class="loading-state">جاري تحميل الورش...</div></div>
+    </div>
+
+    <footer>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</footer>
+  </main>
+</div>
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -62,8 +77,6 @@
     </div>
   </div>
 </div>
-
-<footer>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</footer>
 
 <script src="assets/config.js"></script>
 <script src="assets/app.js"></script>
