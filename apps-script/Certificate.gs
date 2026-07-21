@@ -107,3 +107,14 @@ function generateCertificate_(name) {
     try { copyFile.setTrashed(true); } catch (e) {}
   }
 }
+
+/**
+ * دالة تفعيل صلاحية الإنترنت (UrlFetchApp) — تُستدعى من قائمة "نظام إدارة الورش" مرة واحدة
+ * لو ظهر خطأ "ليس لديك إذن لاستدعاء UrlFetchApp.fetch" عند توليد شهادة.
+ * إضافة صلاحية جديدة بملف appsscript.json لا تُظهر شاشة الموافقة تلقائيًا، فنجبرها تظهر
+ * بتنفيذ استدعاء فعلي لـ UrlFetchApp هنا.
+ */
+function activateInternetPermission_() {
+  UrlFetchApp.fetch('https://www.google.com');
+  SpreadsheetApp.getUi().alert('تمام ✅ تم تفعيل صلاحية الإنترنت. جرّب توليد شهادة من التطبيق الآن.');
+}

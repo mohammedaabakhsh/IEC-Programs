@@ -108,6 +108,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('نظام إدارة الورش')
     .addItem('⚙️ إعداد النظام (مرة واحدة)', 'setupSystem')
+    .addItem('🔑 تفعيل صلاحية الإنترنت (لو ظهر خطأ الشهادة)', 'activateInternetPermission_')
     .addToUi();
 }
 
