@@ -1,6 +1,11 @@
 (function () {
   const content = document.getElementById('content');
   const pageTitle = document.getElementById('pageTitle');
+  const editModalOverlay = document.getElementById('editModalOverlay');
+  const closeEditModal = document.getElementById('closeEditModal');
+  const editForm = document.getElementById('editForm');
+
+  let currentWorkshop = null;
 
   function isConfigured() {
     return APP_CONFIG.API_URL && APP_CONFIG.API_URL.indexOf('PASTE_YOUR') === -1;
@@ -29,7 +34,8 @@
       const res = await fetch(APP_CONFIG.API_URL + '?action=workshop&id=' + encodeURIComponent(id));
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'تعذّر تحميل بيانات الورشة');
-      render(json.data);
+      currentWorkshop = json.data;
+      render(currentWorkshop);
     } catch (err) {
       content.innerHTML = '<div class="error-state">خطأ: ' + err.message + '</div>';
     }
@@ -46,7 +52,14 @@
       kpi(fmtAvg(s.avgOrganization), 'تقييم التنظيم') +
       '</div>';
 
-    html += '<div class="card"><h3 style="margin-top:0;">بيانات الورشة</h3><table class="info-table">' +
+    html += '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<h3 style="margin:0;">بيانات الورشة</h3>' +
+      '<div style="display:flex;gap:8px;">' +
+      '<button class="btn secondary" id="editBtn" type="button">✏️ تعديل</button>' +
+      '<button class="btn" id="deleteBtn" type="button" style="background:var(--danger);">🗑 حذف</button>' +
+      '</div></div>' +
+      '<table class="info-table" style="margin-top:12px;">' +
       infoRow('الوصف', w.description) +
       infoRow('التاريخ', w.date) +
       infoRow('الوقت', w.time) +
@@ -93,6 +106,9 @@
         });
       });
     }
+
+    document.getElementById('editBtn').addEventListener('click', openEditModal);
+    document.getElementById('deleteBtn').addEventListener('click', onDelete);
   }
 
   function kpi(value, label) {
@@ -105,6 +121,86 @@
 
   function fmtAvg(v) {
     return (v === null || v === undefined || isNaN(v)) ? '—' : v + ' / 5';
+  }
+
+  function openEditModal() {
+    document.getElementById('e_name').value = currentWorkshop.name || '';
+    document.getElementById('e_description').value = currentWorkshop.description || '';
+    document.getElementById('e_date').value = currentWorkshop.date || '';
+    document.getElementById('e_time').value = currentWorkshop.time || '';
+    document.getElementById('e_trainer').value = currentWorkshop.trainer || '';
+    document.getElementById('e_audience').value = currentWorkshop.audience || '';
+    document.getElementById('e_participants').value = currentWorkshop.participants || '';
+    document.getElementById('e_organizer').value = currentWorkshop.organizer || '';
+    document.getElementById('editFormError').style.display = 'none';
+    editModalOverlay.classList.add('open');
+  }
+
+  function closeEditModalFn() {
+    editModalOverlay.classList.remove('open');
+  }
+
+  closeEditModal.addEventListener('click', closeEditModalFn);
+  editModalOverlay.addEventListener('click', e => { if (e.target === editModalOverlay) closeEditModalFn(); });
+
+  editForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const errorEl = document.getElementById('editFormError');
+    errorEl.style.display = 'none';
+
+    const payload = {
+      action: 'updateWorkshop',
+      id: currentWorkshop.id,
+      name: document.getElementById('e_name').value.trim(),
+      description: document.getElementById('e_description').value.trim(),
+      date: document.getElementById('e_date').value,
+      time: document.getElementById('e_time').value,
+      trainer: document.getElementById('e_trainer').value.trim(),
+      audience: document.getElementById('e_audience').value.trim(),
+      participants: document.getElementById('e_participants').value,
+      organizer: document.getElementById('e_organizer').value.trim(),
+    };
+
+    const submitBtn = e.target.querySelector('button[type=submit]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري الحفظ...';
+
+    try {
+      const res = await fetch(APP_CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'تعذّر حفظ التعديلات');
+
+      closeEditModalFn();
+      load();
+    } catch (err) {
+      errorEl.textContent = 'حدث خطأ: ' + err.message;
+      errorEl.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'حفظ التعديلات';
+    }
+  });
+
+  async function onDelete() {
+    if (!confirm('متأكد تبي تحذف ورشة "' + currentWorkshop.name + '"؟ الردود المرتبطة بها تبقى محفوظة بالشيت لكن لن تظهر بالتطبيق.')) return;
+
+    try {
+      const res = await fetch(APP_CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'deleteWorkshop', id: currentWorkshop.id }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'تعذّر حذف الورشة');
+
+      window.location.href = 'index.html';
+    } catch (err) {
+      alert('حدث خطأ أثناء الحذف: ' + err.message);
+    }
   }
 
   load();

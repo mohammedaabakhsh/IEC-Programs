@@ -7,6 +7,9 @@
  *   GET  ?action=workshop&id=<المعرف> → تفاصيل وإحصاءات ورشة واحدة
  *   POST { action:'createWorkshop', name, description, date, time, trainer,
  *          audience, participants, organizer } → إنشاء ورشة جديدة وإرجاع رابط/QR التقييم
+ *   POST { action:'updateWorkshop', id, name, description, date, time, trainer,
+ *          audience, participants, organizer } → تعديل بيانات ورشة موجودة
+ *   POST { action:'deleteWorkshop', id } → حذف ورشة
  *
  * ملاحظة: تعبئة نموذج التقييم نفسها تتم مباشرة داخل Google Form (وليس عبر هذا الـ API)،
  * والردود تُحفظ تلقائيًا في ورقة "استجابات التقييم" بواسطة Google Forms.
@@ -39,6 +42,14 @@ function doPost(e) {
 
     if (body.action === 'createWorkshop') {
       return jsonOutput_(createWorkshop_(body));
+    }
+
+    if (body.action === 'updateWorkshop') {
+      return jsonOutput_(updateWorkshop_(body));
+    }
+
+    if (body.action === 'deleteWorkshop') {
+      return jsonOutput_(deleteWorkshop_(body.id));
     }
 
     return jsonOutput_({ ok: false, error: 'إجراء غير معروف' });

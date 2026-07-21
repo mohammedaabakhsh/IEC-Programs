@@ -17,6 +17,33 @@
   <div id="content"><div class="loading-state">جاري التحميل...</div></div>
 </main>
 
+<div class="modal-overlay" id="editModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>تعديل بيانات الورشة</h3>
+      <button class="icon-btn" id="closeEditModal">✕</button>
+    </div>
+    <div id="editModalBody">
+      <form id="editForm">
+        <div class="form-row"><label>اسم الورشة</label><input type="text" id="e_name" required></div>
+        <div class="form-row"><label>وصف البرنامج</label><textarea id="e_description" rows="3"></textarea></div>
+        <div class="form-row two-col">
+          <div><label>التاريخ</label><input type="date" id="e_date" required></div>
+          <div><label>الوقت</label><input type="time" id="e_time" required></div>
+        </div>
+        <div class="form-row"><label>المدرب / مقدم الجلسة</label><input type="text" id="e_trainer" required></div>
+        <div class="form-row"><label>الفئة المستهدفة</label><input type="text" id="e_audience" required></div>
+        <div class="form-row two-col">
+          <div><label>عدد المشاركين</label><input type="number" id="e_participants" min="1" required></div>
+          <div><label>الجهة المنظمة</label><input type="text" id="e_organizer" required></div>
+        </div>
+        <div id="editFormError" class="error-state" style="display:none;"></div>
+        <button type="submit" class="btn" style="width:100%;">حفظ التعديلات</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <footer>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</footer>
 
 <script src="assets/config.js"></script>
