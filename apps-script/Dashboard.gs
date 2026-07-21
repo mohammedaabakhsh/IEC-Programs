@@ -5,19 +5,19 @@
 
 const RESPONSE_COL = {
   TIMESTAMP: 0,
-  PROGRAM_NAME: 1,
-  FULL_NAME: 2,
-  EMAIL: 3,
-  GOALS_CLARITY: 4,       // وضوح أهداف الورشة
-  CONTENT_STRUCTURE: 5,   // تنظيم وتسلسل المحتوى
-  TOPIC_RELEVANCE: 6,     // ملاءمة الموضوع
-  MATERIAL_QUALITY: 7,    // جودة المادة العلمية
-  TRAINER_CLARITY: 8,     // وضوح الشرح
-  TRAINER_COMMUNICATION: 9, // إيصال المعلومات
-  TRAINER_INTERACTION: 10,  // التفاعل مع المشاركين
-  TRAINER_TIME_MGMT: 11,    // إدارة الوقت
-  GENERAL_RATING: 12,       // تقييمكم العام للورشة
-  NOTES: 13,                // ملاحظاتكم ومقترحاتكم
+  FULL_NAME: 1,
+  EMAIL: 2,
+  GOALS_CLARITY: 3,       // وضوح أهداف الورشة
+  CONTENT_STRUCTURE: 4,   // تنظيم وتسلسل المحتوى
+  TOPIC_RELEVANCE: 5,     // ملاءمة الموضوع
+  MATERIAL_QUALITY: 6,    // جودة المادة العلمية
+  TRAINER_CLARITY: 7,     // وضوح الشرح
+  TRAINER_COMMUNICATION: 8, // إيصال المعلومات
+  TRAINER_INTERACTION: 9,   // التفاعل مع المشاركين
+  TRAINER_TIME_MGMT: 10,    // إدارة الوقت
+  GENERAL_RATING: 11,       // تقييمكم العام للورشة
+  NOTES: 12,                // ملاحظاتكم ومقترحاتكم
+  PROGRAM_NAME: 13,         // اسم الورشة (قبل الأخير، حقل مخفي تلقائي)
   PROGRAM_ID: 14,           // معرف الورشة (آخر عمود، حقل مخفي تلقائي)
 };
 
