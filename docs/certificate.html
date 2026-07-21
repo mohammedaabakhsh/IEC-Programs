@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توليد شهادة تقدير</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>توليد شهادة تقدير</h1>
+  <p><a href="index.html" style="color:#fff;">→ العودة لقائمة الورش</a></p>
+</header>
+
+<main>
+  <div class="card" style="max-width:480px;margin:0 auto;">
+    <p style="color:var(--muted);font-size:13.5px;margin-top:0;">اكتب اسم المستفيد، وبتنزّل لك شهادة PDF جاهزة فورًا بنفس التصميم المعتمد.</p>
+    <form id="certForm">
+      <div class="form-row"><label>اسم المستفيد</label><input type="text" id="c_name" placeholder="مثال: محمد علي" required></div>
+      <div id="certError" class="error-state" style="display:none;"></div>
+      <button type="submit" class="btn" style="width:100%;">🏅 توليد الشهادة وتنزيلها</button>
+    </form>
+    <div id="certSuccess" style="display:none;" class="success-box">
+      <div class="icon">✅</div>
+      <h3 style="margin:4px 0;">تم توليد الشهادة</h3>
+      <p style="color:var(--muted);font-size:13px;">إذا ما بدأ التنزيل تلقائيًا، اضغط الزر:</p>
+      <a id="downloadLink" class="btn" style="display:inline-block;text-decoration:none;">⬇️ تنزيل الشهادة</a>
+      <div style="margin-top:14px;">
+        <button class="btn secondary" id="anotherBtn" type="button">توليد شهادة ثانية</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</footer>
+
+<script src="assets/config.js"></script>
+<script src="assets/certificate.js"></script>
+</body>
+</html>

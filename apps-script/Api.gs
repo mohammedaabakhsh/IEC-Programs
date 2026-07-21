@@ -10,6 +10,7 @@
  *   POST { action:'updateWorkshop', id, name, description, date, time, trainer,
  *          audience, participants, organizer } → تعديل بيانات ورشة موجودة
  *   POST { action:'deleteWorkshop', id } → حذف ورشة
+ *   POST { action:'generateCertificate', name } → توليد شهادة تقدير PDF بالاسم (base64)
  *
  * ملاحظة: تعبئة نموذج التقييم نفسها تتم مباشرة داخل Google Form (وليس عبر هذا الـ API)،
  * والردود تُحفظ تلقائيًا في ورقة "استجابات التقييم" بواسطة Google Forms.
@@ -50,6 +51,10 @@ function doPost(e) {
 
     if (body.action === 'deleteWorkshop') {
       return jsonOutput_(deleteWorkshop_(body.id));
+    }
+
+    if (body.action === 'generateCertificate') {
+      return jsonOutput_(generateCertificate_(body.name));
     }
 
     return jsonOutput_({ ok: false, error: 'إجراء غير معروف' });
