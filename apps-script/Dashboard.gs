@@ -322,6 +322,7 @@ function getTrainerDetail_(trainerName) {
 
   const badges = getTrainerBadges_(trainerPrograms.length, stats.avgOverall);
   const trend = getTrainerTrend_(workshops);
+  const profile = getTrainerProfile_(trainerName);
 
   return {
     trainer: trainerName,
@@ -331,6 +332,7 @@ function getTrainerDetail_(trainerName) {
     stats: stats,
     badges: badges,
     trend: trend,
+    profile: profile,
   };
 }
 
@@ -918,5 +920,52 @@ function getGoalsProgress_() {
     targetParticipants: settings.targetParticipants,
     actualParticipants: curYearParticipants,
     participantsPct: pct(curYearParticipants, settings.targetParticipants),
+  };
+}
+
+
+/** يجمع كل بيانات لوحة التحكم الرئيسية بنداء واحد بدل 3 نداءات منفصلة (أسرع تحميلًا) */
+function getDashboardBundle_() {
+  return {
+    dashboard: getDashboardStats_(),
+    kpiExtended: getKPIExtended_(),
+    goals: getGoalsProgress_(),
+  };
+}
+
+/** يجمع كل بيانات صفحة التقارير والتحليلات بنداء واحد بدل 9 نداءات منفصلة (أسرع تحميلًا) */
+function getReportsBundle_() {
+  return {
+    reports: getReportsData_(),
+    recommendations: getRecommendations_(),
+    activeTrainers: getMostActiveTrainers_(),
+    organizers: getOrganizerAnalysis_(),
+    audiences: getAudienceAnalysis_(),
+    timeAnalysis: getTimeAnalysis_(),
+    bestWorst: getBestWorstAnalysis_(),
+    keywords: getKeywordAnalysis_(),
+    recurringPrograms: getRecurringPrograms_(),
+  };
+}
+
+/** فهرس خفيف (أسماء فقط) للبحث السريع من القائمة الجانبية في أي صفحة */
+function getSearchIndex_() {
+  const programs = getAllProgramRows_();
+  const workshops = [];
+  const trainersSet = {};
+  const typesSet = {};
+
+  programs.forEach(p => {
+    workshops.push({ id: p.data['المعرف'], name: p.data['اسم الورشة'] });
+    const trainer = p.data['المدرب'];
+    if (trainer) trainersSet[trainer] = true;
+    const type = p.data['نوع النشاط'];
+    if (type) typesSet[type] = true;
+  });
+
+  return {
+    workshops: workshops,
+    trainers: Object.keys(trainersSet).sort(),
+    types: Object.keys(typesSet).sort(),
   };
 }

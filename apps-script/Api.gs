@@ -23,7 +23,10 @@
  *   GET  ?action=kpiExtended           → مؤشرات KPI إضافية (رضا/حضور/نمو سنوي)
  *   GET  ?action=goals                 → تقدّم الأهداف السنوية مقابل الفعلي
  *   GET  ?action=settings              → قراءة الإعدادات (الأهداف والقوائم القابلة للتعديل)
- *   GET  ?action=trainerProfile&name=<اسم المدرب> → الملف التعريفي الاختياري لمدرب
+ *   GET  ?action=trainerProfile&name=<اسم المدرب> → الملف التعريفي الاختياري لمدرب (مُضمَّن أيضًا داخل ?action=trainer)
+ *   GET  ?action=dashboardBundle        → كل بيانات لوحة التحكم بنداء واحد (أسرع من 3 نداءات منفصلة)
+ *   GET  ?action=reportsBundle          → كل بيانات صفحة التقارير بنداء واحد (أسرع من 9 نداءات منفصلة)
+ *   GET  ?action=searchIndex            → فهرس خفيف (ورش/مدربين/أنواع) للبحث السريع بالقائمة الجانبية
  *   POST { action:'createWorkshop', name, description, date, time, trainer,
  *          audience, participants, organizer } → إنشاء ورشة جديدة وإرجاع رابط/QR التقييم
  *   POST { action:'updateWorkshop', id, name, description, date, time, trainer,
@@ -141,6 +144,18 @@ function doGet(e) {
     if (action === 'trainerProfile') {
       const trainerName = e.parameter.name;
       return jsonOutput_({ ok: true, data: getTrainerProfile_(trainerName) });
+    }
+
+    if (action === 'dashboardBundle') {
+      return jsonOutput_({ ok: true, data: getDashboardBundle_() });
+    }
+
+    if (action === 'reportsBundle') {
+      return jsonOutput_({ ok: true, data: getReportsBundle_() });
+    }
+
+    if (action === 'searchIndex') {
+      return jsonOutput_({ ok: true, data: getSearchIndex_() });
     }
 
     return jsonOutput_({ ok: true, message: 'IEC-Programs API يعمل بنجاح.' });

@@ -39,13 +39,6 @@
     return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
   }
 
-  async function fetchJson(url) {
-    const res = await fetch(url);
-    const json = await res.json();
-    if (!json.ok) throw new Error(json.error || 'تعذّر التحميل');
-    return json.data;
-  }
-
   async function load() {
     if (!isConfigured()) {
       content.innerHTML = '<div class="error-state">⚠️ لم يتم ربط رابط الخادم (API_URL) بعد.</div>';
@@ -59,12 +52,12 @@
     currentTrainerName = name;
 
     try {
-      const [detail, profile] = await Promise.all([
-        fetchJson(APP_CONFIG.API_URL + '?action=trainer&name=' + encodeURIComponent(name)),
-        fetchJson(APP_CONFIG.API_URL + '?action=trainerProfile&name=' + encodeURIComponent(name)),
-      ]);
-      currentProfile = profile;
-      render(detail, profile);
+      const res = await fetch(APP_CONFIG.API_URL + '?action=trainer&name=' + encodeURIComponent(name));
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'تعذّر تحميل بيانات المدرب');
+      const detail = json.data;
+      currentProfile = detail.profile;
+      render(detail, detail.profile);
     } catch (err) {
       content.innerHTML = '<div class="error-state">خطأ: ' + err.message + '</div>';
     }

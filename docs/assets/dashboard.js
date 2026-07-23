@@ -17,32 +17,43 @@
     return (v === null || v === undefined || isNaN(v)) ? '—' : v + '%';
   }
 
-  async function fetchJson(action) {
-    const res = await fetch(APP_CONFIG.API_URL + '?action=' + action);
-    const json = await res.json();
-    if (!json.ok) throw new Error(json.error || ('تعذّر تحميل ' + action));
-    return json.data;
-  }
-
   async function load() {
     if (!isConfigured()) {
       content.innerHTML = '<div class="error-state">⚠️ لم يتم ربط رابط الخادم (API_URL) بعد.<br>افتح ملف assets/config.js وضع رابط Apps Script Web App.</div>';
       return;
     }
+    content.innerHTML = '<div class="loading-state">جاري تحميل المؤشرات...</div>';
     try {
-      const [dashboard, kpiExtended, goals] = await Promise.all([
-        fetchJson('dashboard'),
-        fetchJson('kpiExtended'),
-        fetchJson('goals'),
-      ]);
-      render(dashboard, kpiExtended, goals);
+      const res = await fetch(APP_CONFIG.API_URL + '?action=dashboardBundle');
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'تعذّر تحميل البيانات');
+      render(json.data.dashboard, json.data.kpiExtended, json.data.goals);
     } catch (err) {
       content.innerHTML = '<div class="error-state">تعذّر تحميل البيانات: ' + err.message + '</div>';
     }
   }
 
+  function refreshButton() {
+    return '<div style="text-align:left;margin-bottom:10px;">' +
+      '<button class="btn secondary" id="refreshDashboardBtn" type="button" style="font-size:12px;padding:7px 14px;">🔄 تحديث</button>' +
+      '</div>';
+  }
+
   function render(d, k, g) {
-    let html = '';
+    let html = refreshButton();
+
+    // حالة بداية ودّية لو ما فيه بيانات بعد
+    if (!k.totalProgramsEver || k.totalProgramsEver === 0) {
+      html += '<div class="card" style="text-align:center;padding:40px 20px;">' +
+        '<div style="font-size:40px;margin-bottom:10px;">🚀</div>' +
+        '<h3 style="margin:0 0 8px;">أهلًا بك في نظام إدارة برامج وورش المركز</h3>' +
+        '<p style="color:var(--muted);font-size:13.5px;max-width:420px;margin:0 auto 18px;">ما عندك أي ورشة أو برنامج مسجّل بعد. أضف أول ورشة وابدأ بمتابعة كل شي: روابط التقييم، الحضور، التحليلات، وكل التفاصيل من مكان واحد.</p>' +
+        '<a href="workshops.html" class="btn" style="text-decoration:none;">➕ أضف أول ورشة</a>' +
+        '</div>';
+      content.innerHTML = html;
+      wireRefresh();
+      return;
+    }
 
     // سجل الإنجازات
     html += '<div class="card" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;">' +
@@ -97,6 +108,12 @@
       '</div></div>';
 
     content.innerHTML = html;
+    wireRefresh();
+  }
+
+  function wireRefresh() {
+    const btn = document.getElementById('refreshDashboardBtn');
+    if (btn) btn.addEventListener('click', load);
   }
 
   function goalBar(label, actual, target, pct) {

@@ -16,6 +16,11 @@
       <div class="brand-mark">IEC</div>
       <div><strong>مركز الابتكار</strong><span>وريادة الأعمال</span></div>
     </div>
+    <div class="sidebar-search" style="padding:0 0 16px;position:relative;">
+      <input type="text" id="quickSearchInput" placeholder="🔍 بحث سريع..." autocomplete="off"
+        style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-size:12.5px;outline:none;">
+      <div id="quickSearchResults" style="display:none;position:absolute;top:calc(100% + 4px);right:0;left:0;background:#fff;border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.22);max-height:280px;overflow-y:auto;z-index:60;"></div>
+    </div>
     <nav class="nav-list">
       <a href="index.html" class="nav-item"><span class="ic">🏠</span> لوحة التحكم</a>
       <a href="workshops.html" class="nav-item"><span class="ic">📋</span> الورش والبرامج</a>
@@ -42,5 +47,6 @@
 
 <script src="assets/config.js"></script>
 <script src="assets/reports.js"></script>
+<script src="assets/quicksearch.js"></script>
 </body>
 </html>

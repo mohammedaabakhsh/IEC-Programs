@@ -18,31 +18,17 @@
     try { return new Date(v).toLocaleDateString('ar-SA'); } catch (e) { return ''; }
   }
 
-  async function fetchJson(action) {
-    const res = await fetch(APP_CONFIG.API_URL + '?action=' + action);
-    const json = await res.json();
-    if (!json.ok) throw new Error(json.error || ('تعذّر تحميل ' + action));
-    return json.data;
-  }
-
   async function load() {
     if (!isConfigured()) {
       content.innerHTML = '<div class="error-state">⚠️ لم يتم ربط رابط الخادم (API_URL) بعد.</div>';
       return;
     }
+    content.innerHTML = '<div class="loading-state">جاري تحميل التقارير...</div>';
     try {
-      const [reports, recommendations, activeTrainers, organizers, audiences, timeAnalysis, bestWorst, keywords, recurringPrograms] = await Promise.all([
-        fetchJson('reports'),
-        fetchJson('recommendations'),
-        fetchJson('activeTrainers'),
-        fetchJson('organizers'),
-        fetchJson('audiences'),
-        fetchJson('timeAnalysis'),
-        fetchJson('bestWorst'),
-        fetchJson('keywords'),
-        fetchJson('recurringPrograms'),
-      ]);
-      render({ reports, recommendations, activeTrainers, organizers, audiences, timeAnalysis, bestWorst, keywords, recurringPrograms });
+      const res = await fetch(APP_CONFIG.API_URL + '?action=reportsBundle');
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'تعذّر تحميل التقارير');
+      render(json.data);
     } catch (err) {
       content.innerHTML = '<div class="error-state">خطأ: ' + err.message + '</div>';
     }
@@ -50,7 +36,7 @@
 
   function render(data) {
     const d = data.reports;
-    let html = '';
+    let html = '<div style="text-align:left;margin-bottom:10px;"><button class="btn secondary" id="refreshReportsBtn" type="button" style="font-size:12px;padding:7px 14px;">🔄 تحديث</button></div>';
 
     // مؤشرات عامة
     html += '<div class="kpi-grid">' +
@@ -152,6 +138,8 @@
     html += '</div>';
 
     content.innerHTML = html;
+    const refreshBtn = document.getElementById('refreshReportsBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', load);
   }
 
   function renderRecommendations(recs) {
