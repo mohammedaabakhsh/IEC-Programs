@@ -8,12 +8,29 @@
  *   GET  ?action=reports                → تحليلات عامة: حسب المدرب، حسب نوع النشاط، وأحدث الملاحظات
  *   GET  ?action=trainer&name=<اسم المدرب> → صفحة تفاصيل مدرب واحد (كل ورشه وإحصاءاته)
  *   GET  ?action=dashboard             → مؤشرات لوحة التحكم الرئيسية (KPIs سريعة)
+ *   GET  ?action=organizers            → تحليل حسب الجهة المنظمة
+ *   GET  ?action=audiences             → تحليل حسب الفئة المستهدفة
+ *   GET  ?action=timeAnalysis          → تحليل زمني (شهري/سنوي وأنشط/أقل شهر)
+ *   GET  ?action=bestWorst             → أفضل/أسوأ 10 ورش وأعلى/أقل 10 مدربين
+ *   GET  ?action=type&type=<النوع>     → تفاصيل نوع نشاط واحد
+ *   GET  ?action=program&name=<الاسم>  → تفاصيل "برنامج" واحد (كل نسخه المتكررة)
+ *   GET  ?action=recurringPrograms     → قائمة البرامج المتكررة (نُفّذت أكثر من مرة)
+ *   GET  ?action=comparisonOptions     → القيم المتاحة لأداة المقارنة
+ *   GET  ?action=compare&dimension=&value1=&value2= → مقارنة بين قيمتين (مدرب/نوع/سنة/جهة)
+ *   GET  ?action=keywords              → تحليل الكلمات المفتاحية بعناوين البرامج
+ *   GET  ?action=activeTrainers        → أكثر المدربين نشاطًا (تنفيذ/تقييم/مشاركين)
+ *   GET  ?action=recommendations       → توصيات إدارية آلية مبنية على قواعد إحصائية
+ *   GET  ?action=kpiExtended           → مؤشرات KPI إضافية (رضا/حضور/نمو سنوي)
+ *   GET  ?action=goals                 → تقدّم الأهداف السنوية مقابل الفعلي
+ *   GET  ?action=settings              → قراءة الإعدادات (الأهداف والقوائم القابلة للتعديل)
  *   POST { action:'createWorkshop', name, description, date, time, trainer,
  *          audience, participants, organizer } → إنشاء ورشة جديدة وإرجاع رابط/QR التقييم
  *   POST { action:'updateWorkshop', id, name, description, date, time, trainer,
  *          audience, participants, organizer } → تعديل بيانات ورشة موجودة
  *   POST { action:'deleteWorkshop', id } → حذف ورشة
  *   POST { action:'generateCertificate', name } → توليد شهادة تقدير PDF بالاسم (base64)
+ *   POST { action:'updateSettings', targetPrograms, targetParticipants,
+ *          audienceCategories, keywords } → تحديث إعدادات النظام
  *
  * ملاحظة: تعبئة نموذج التقييم نفسها تتم مباشرة داخل Google Form (وليس عبر هذا الـ API)،
  * والردود تُحفظ تلقائيًا في ورقة "استجابات التقييم" بواسطة Google Forms.
@@ -49,6 +66,75 @@ function doGet(e) {
       return jsonOutput_({ ok: true, data: getDashboardStats_() });
     }
 
+    if (action === 'organizers') {
+      return jsonOutput_({ ok: true, data: getOrganizerAnalysis_() });
+    }
+
+    if (action === 'audiences') {
+      return jsonOutput_({ ok: true, data: getAudienceAnalysis_() });
+    }
+
+    if (action === 'timeAnalysis') {
+      return jsonOutput_({ ok: true, data: getTimeAnalysis_() });
+    }
+
+    if (action === 'bestWorst') {
+      return jsonOutput_({ ok: true, data: getBestWorstAnalysis_() });
+    }
+
+    if (action === 'type') {
+      const type = e.parameter.type;
+      const detail = getTypeDetail_(type);
+      if (!detail) return jsonOutput_({ ok: false, error: 'نوع النشاط غير موجود' });
+      return jsonOutput_({ ok: true, data: detail });
+    }
+
+    if (action === 'program') {
+      const name = e.parameter.name;
+      const detail = getProgramDetail_(name);
+      if (!detail) return jsonOutput_({ ok: false, error: 'البرنامج غير موجود' });
+      return jsonOutput_({ ok: true, data: detail });
+    }
+
+    if (action === 'recurringPrograms') {
+      return jsonOutput_({ ok: true, data: getRecurringPrograms_() });
+    }
+
+    if (action === 'comparisonOptions') {
+      return jsonOutput_({ ok: true, data: getComparisonOptions_() });
+    }
+
+    if (action === 'compare') {
+      const dimension = e.parameter.dimension;
+      const value1 = e.parameter.value1;
+      const value2 = e.parameter.value2;
+      return jsonOutput_({ ok: true, data: getComparisonData_(dimension, value1, value2) });
+    }
+
+    if (action === 'keywords') {
+      return jsonOutput_({ ok: true, data: getKeywordAnalysis_() });
+    }
+
+    if (action === 'activeTrainers') {
+      return jsonOutput_({ ok: true, data: getMostActiveTrainers_() });
+    }
+
+    if (action === 'recommendations') {
+      return jsonOutput_({ ok: true, data: getRecommendations_() });
+    }
+
+    if (action === 'kpiExtended') {
+      return jsonOutput_({ ok: true, data: getKPIExtended_() });
+    }
+
+    if (action === 'goals') {
+      return jsonOutput_({ ok: true, data: getGoalsProgress_() });
+    }
+
+    if (action === 'settings') {
+      return jsonOutput_({ ok: true, data: getSettings_() });
+    }
+
     return jsonOutput_({ ok: true, message: 'IEC-Programs API يعمل بنجاح.' });
   } catch (err) {
     return jsonOutput_({ ok: false, error: String(err) });
@@ -73,6 +159,10 @@ function doPost(e) {
 
     if (body.action === 'generateCertificate') {
       return jsonOutput_(generateCertificate_(body.name));
+    }
+
+    if (body.action === 'updateSettings') {
+      return jsonOutput_(updateSettings_(body));
     }
 
     return jsonOutput_({ ok: false, error: 'إجراء غير معروف' });

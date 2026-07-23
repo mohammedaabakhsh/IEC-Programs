@@ -9,6 +9,7 @@ function setupSystem() {
   ensureResponsesSheet_(ss);
   const form = ensureEvaluationForm_(ss);
   migrateAddActivityTypeColumn_();
+  ensureSettingsSheet_();
 
   SpreadsheetApp.getUi().alert(
     'تم إعداد النظام بنجاح ✅\n\n' +

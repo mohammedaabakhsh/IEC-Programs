@@ -404,3 +404,476 @@ function getDashboardStats_() {
     thisYearCount: thisYearCount,
   };
 }
+
+/** تحليل حسب الجهة المنظمة: عدد ورش لكل جهة، متوسط تقييمها، وإجمالي مشاركيها */
+function getOrganizerAnalysis_() {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+
+  const map = {};
+  programs.forEach(p => {
+    const organizer = p.data['الجهة المنظمة'] || 'غير محدد';
+    const id = String(p.data['المعرف']);
+    const participants = Number(p.data['عدد المشاركين']) || 0;
+    if (!map[organizer]) map[organizer] = { ids: [], workshopCount: 0, totalParticipants: 0 };
+    map[organizer].ids.push(id);
+    map[organizer].workshopCount += 1;
+    map[organizer].totalParticipants += participants;
+  });
+
+  return Object.keys(map).map(organizer => {
+    const info = map[organizer];
+    const orgResponses = responses.filter(r => info.ids.indexOf(String(r.programId)) !== -1);
+    const stats = computeStats_(orgResponses);
+    return {
+      organizer: organizer,
+      workshopCount: info.workshopCount,
+      totalParticipants: info.totalParticipants,
+      avgOverall: stats.avgOverall,
+    };
+  }).sort((a, b) => (b.avgOverall || 0) - (a.avgOverall || 0));
+}
+
+/** تحليل حسب الفئة المستهدفة: عدد برامج/متوسط تقييم لكل فئة + أكثر فئة تم استهدافها */
+function getAudienceAnalysis_() {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+
+  const map = {};
+  programs.forEach(p => {
+    const audience = p.data['الفئة المستهدفة'] || 'غير محدد';
+    const id = String(p.data['المعرف']);
+    const participants = Number(p.data['عدد المشاركين']) || 0;
+    if (!map[audience]) map[audience] = { ids: [], workshopCount: 0, totalParticipants: 0 };
+    map[audience].ids.push(id);
+    map[audience].workshopCount += 1;
+    map[audience].totalParticipants += participants;
+  });
+
+  const list = Object.keys(map).map(audience => {
+    const info = map[audience];
+    const aResponses = responses.filter(r => info.ids.indexOf(String(r.programId)) !== -1);
+    const stats = computeStats_(aResponses);
+    return {
+      audience: audience,
+      workshopCount: info.workshopCount,
+      totalParticipants: info.totalParticipants,
+      avgOverall: stats.avgOverall,
+    };
+  }).sort((a, b) => b.workshopCount - a.workshopCount);
+
+  return {
+    list: list,
+    mostTargeted: list.length ? list[0].audience : null,
+  };
+}
+
+const MONTH_NAMES_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+/** تحليل زمني: عدد الورش لكل شهر (مجمّع عبر كل السنوات) + لكل سنة + أنشط/أقل شهر نشاطًا */
+function getTimeAnalysis_() {
+  const programs = getAllProgramRows_();
+
+  const byMonthName = {};
+  MONTH_NAMES_AR.forEach(m => { byMonthName[m] = 0; });
+  const byYear = {};
+  const byYearMonth = {};
+
+  programs.forEach(p => {
+    const dateStr = String(p.data['التاريخ'] || '');
+    const m = dateStr.match(/^(\d{4})-(\d{2})/);
+    if (!m) return;
+    const year = m[1];
+    const monthIdx = parseInt(m[2], 10) - 1;
+    const monthName = MONTH_NAMES_AR[monthIdx];
+    if (monthName) byMonthName[monthName] += 1;
+
+    byYear[year] = (byYear[year] || 0) + 1;
+
+    const ym = year + '-' + m[2];
+    byYearMonth[ym] = (byYearMonth[ym] || 0) + 1;
+  });
+
+  const monthEntries = MONTH_NAMES_AR.map(name => ({ month: name, count: byMonthName[name] }));
+  const withData = monthEntries.filter(e => e.count > 0);
+
+  let mostActiveMonth = null;
+  let leastActiveMonth = null;
+  if (withData.length) {
+    mostActiveMonth = withData.reduce((a, b) => (b.count > a.count ? b : a));
+    leastActiveMonth = withData.reduce((a, b) => (b.count < a.count ? b : a));
+  }
+
+  return {
+    byMonthName: monthEntries,
+    byYear: Object.keys(byYear).sort().map(y => ({ year: y, count: byYear[y] })),
+    byYearMonth: Object.keys(byYearMonth).sort().map(ym => ({ yearMonth: ym, count: byYearMonth[ym] })),
+    mostActiveMonth: mostActiveMonth,
+    leastActiveMonth: leastActiveMonth,
+  };
+}
+
+/** أفضل وأسوأ 10 ورش (حسب متوسط التقييم) + أعلى وأقل 10 مدربين */
+function getBestWorstAnalysis_() {
+  const summary = getWorkshopsSummary_();
+  const rated = summary.filter(w => w.avgOverall !== null && w.avgOverall !== undefined);
+
+  const bestWorkshops = rated.slice().sort((a, b) => b.avgOverall - a.avgOverall).slice(0, 10);
+  const worstWorkshops = rated.slice().sort((a, b) => a.avgOverall - b.avgOverall).slice(0, 10);
+
+  const reportsData = getReportsData_();
+  const ratedTrainers = reportsData.byTrainer.filter(t => t.avgOverall !== null && t.avgOverall !== undefined);
+  const bestTrainers = ratedTrainers.slice(0, 10);
+  const worstTrainers = ratedTrainers.slice().reverse().slice(0, 10);
+
+  return {
+    bestWorkshops: bestWorkshops,
+    worstWorkshops: worstWorkshops,
+    bestTrainers: bestTrainers,
+    worstTrainers: worstTrainers,
+  };
+}
+
+/** بيانات صفحة تفاصيل نوع نشاط واحد: كل ورشه، إحصاءاته، وأفضل المدربين ضمن هذا النوع */
+function getTypeDetail_(type) {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+
+  const typePrograms = programs.filter(p => (p.data['نوع النشاط'] || 'غير محدد') === type);
+  if (typePrograms.length === 0) return null;
+
+  const ids = typePrograms.map(p => String(p.data['المعرف']));
+  const typeResponses = responses.filter(r => ids.indexOf(String(r.programId)) !== -1);
+  const stats = computeStats_(typeResponses);
+
+  let totalParticipants = 0;
+  const workshops = typePrograms.map(p => {
+    const wId = p.data['المعرف'];
+    const wResponses = responses.filter(r => String(r.programId) === String(wId));
+    const wStats = computeStats_(wResponses);
+    const participants = Number(p.data['عدد المشاركين']) || 0;
+    totalParticipants += participants;
+    return {
+      id: wId,
+      name: p.data['اسم الورشة'],
+      trainer: p.data['المدرب'],
+      date: p.data['التاريخ'],
+      participants: participants,
+      responseCount: wStats.count,
+      avgOverall: wStats.avgOverall,
+    };
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const trainerMap = {};
+  typePrograms.forEach(p => {
+    const trainer = p.data['المدرب'] || 'غير محدد';
+    const id = String(p.data['المعرف']);
+    if (!trainerMap[trainer]) trainerMap[trainer] = [];
+    trainerMap[trainer].push(id);
+  });
+  const topTrainers = Object.keys(trainerMap).map(trainer => {
+    const tIds = trainerMap[trainer];
+    const tResponses = responses.filter(r => tIds.indexOf(String(r.programId)) !== -1);
+    const tStats = computeStats_(tResponses);
+    return { trainer: trainer, workshopCount: tIds.length, avgOverall: tStats.avgOverall };
+  }).sort((a, b) => (b.avgOverall || 0) - (a.avgOverall || 0));
+
+  return {
+    type: type,
+    workshopCount: typePrograms.length,
+    totalParticipants: totalParticipants,
+    workshops: workshops,
+    stats: stats,
+    topTrainers: topTrainers,
+  };
+}
+
+/** بيانات صفحة تفاصيل "برنامج" واحد (كل نسخه اللي بنفس الاسم بالضبط) */
+function getProgramDetail_(name) {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+
+  const matches = programs.filter(p => (p.data['اسم الورشة'] || '') === name);
+  if (matches.length === 0) return null;
+
+  let totalParticipants = 0;
+  const instances = matches.map(p => {
+    const wId = p.data['المعرف'];
+    const wResponses = responses.filter(r => String(r.programId) === String(wId));
+    const wStats = computeStats_(wResponses);
+    const participants = Number(p.data['عدد المشاركين']) || 0;
+    totalParticipants += participants;
+    return {
+      id: wId,
+      trainer: p.data['المدرب'],
+      type: p.data['نوع النشاط'],
+      date: p.data['التاريخ'],
+      participants: participants,
+      responseCount: wStats.count,
+      avgOverall: wStats.avgOverall,
+    };
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const ids = matches.map(p => String(p.data['المعرف']));
+  const allResponses = responses.filter(r => ids.indexOf(String(r.programId)) !== -1);
+  const stats = computeStats_(allResponses);
+
+  let bestInstance = null;
+  instances.forEach(inst => {
+    if (inst.avgOverall !== null && inst.avgOverall !== undefined) {
+      if (!bestInstance || inst.avgOverall > bestInstance.avgOverall) bestInstance = inst;
+    }
+  });
+
+  return {
+    name: name,
+    executionCount: matches.length,
+    totalParticipants: totalParticipants,
+    instances: instances,
+    stats: stats,
+    bestTrainer: bestInstance ? { trainer: bestInstance.trainer, avgOverall: bestInstance.avgOverall } : null,
+  };
+}
+
+/** قائمة كل "البرامج" اللي نُفّذت أكثر من مرة بنفس الاسم بالضبط (لصفحة التقارير) */
+function getRecurringPrograms_() {
+  const programs = getAllProgramRows_();
+  const nameMap = {};
+  programs.forEach(p => {
+    const name = p.data['اسم الورشة'];
+    nameMap[name] = (nameMap[name] || 0) + 1;
+  });
+  return Object.keys(nameMap)
+    .filter(name => nameMap[name] > 1)
+    .map(name => ({ name: name, executionCount: nameMap[name] }))
+    .sort((a, b) => b.executionCount - a.executionCount);
+}
+
+/** القيم المتاحة لأداة المقارنة (لتعبئة قوائم الاختيار بالواجهة) */
+function getComparisonOptions_() {
+  const programs = getAllProgramRows_();
+  const trainers = {};
+  const types = {};
+  const organizers = {};
+  const years = {};
+
+  programs.forEach(p => {
+    trainers[p.data['المدرب'] || 'غير محدد'] = true;
+    types[p.data['نوع النشاط'] || 'غير محدد'] = true;
+    organizers[p.data['الجهة المنظمة'] || 'غير محدد'] = true;
+    const y = String(p.data['التاريخ'] || '').substring(0, 4);
+    if (y) years[y] = true;
+  });
+
+  return {
+    trainers: Object.keys(trainers).sort(),
+    types: Object.keys(types).sort(),
+    organizers: Object.keys(organizers).sort(),
+    years: Object.keys(years).sort(),
+  };
+}
+
+function getComparisonSide_(dimension, value) {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+
+  let matches;
+  if (dimension === 'trainer') {
+    matches = programs.filter(p => (p.data['المدرب'] || 'غير محدد') === value);
+  } else if (dimension === 'type') {
+    matches = programs.filter(p => (p.data['نوع النشاط'] || 'غير محدد') === value);
+  } else if (dimension === 'organizer') {
+    matches = programs.filter(p => (p.data['الجهة المنظمة'] || 'غير محدد') === value);
+  } else if (dimension === 'year') {
+    matches = programs.filter(p => String(p.data['التاريخ'] || '').indexOf(String(value)) === 0);
+  } else {
+    matches = [];
+  }
+
+  const ids = matches.map(p => String(p.data['المعرف']));
+  const matchResponses = responses.filter(r => ids.indexOf(String(r.programId)) !== -1);
+  const stats = computeStats_(matchResponses);
+
+  let totalParticipants = 0;
+  matches.forEach(p => { totalParticipants += Number(p.data['عدد المشاركين']) || 0; });
+
+  const trainerMap = {};
+  matches.forEach(p => {
+    const trainer = p.data['المدرب'] || 'غير محدد';
+    const id = String(p.data['المعرف']);
+    if (!trainerMap[trainer]) trainerMap[trainer] = [];
+    trainerMap[trainer].push(id);
+  });
+  let bestTrainer = null;
+  let bestTrainerAvg = null;
+  Object.keys(trainerMap).forEach(trainer => {
+    const tIds = trainerMap[trainer];
+    const tResponses = responses.filter(r => tIds.indexOf(String(r.programId)) !== -1);
+    const avg = computeStats_(tResponses).avgOverall;
+    if (avg !== null && (bestTrainerAvg === null || avg > bestTrainerAvg)) {
+      bestTrainerAvg = avg;
+      bestTrainer = trainer;
+    }
+  });
+
+  return {
+    label: value,
+    workshopCount: matches.length,
+    totalParticipants: totalParticipants,
+    avgOverall: stats.avgOverall,
+    bestTrainer: bestTrainer,
+    bestTrainerAvg: bestTrainerAvg,
+  };
+}
+
+/** مقارنة بين قيمتين ضمن نفس البُعد (مدرب/نوع/سنة/جهة منظمة) */
+function getComparisonData_(dimension, value1, value2) {
+  return {
+    dimension: dimension,
+    a: getComparisonSide_(dimension, value1),
+    b: getComparisonSide_(dimension, value2),
+  };
+}
+
+/** تحليل الكلمات المفتاحية: يحسب تكرار كل كلمة من قائمة الإعدادات ضمن عناوين البرامج */
+function getKeywordAnalysis_() {
+  const programs = getAllProgramRows_();
+  const settings = getSettings_();
+
+  return settings.keywords.map(keyword => {
+    const count = programs.filter(p => String(p.data['اسم الورشة'] || '').indexOf(keyword) !== -1).length;
+    return { keyword: keyword, count: count };
+  }).sort((a, b) => b.count - a.count);
+}
+
+/** أكثر المدربين نشاطًا من 3 زوايا: عدد التنفيذ، متوسط التقييم، إجمالي المشاركين */
+function getMostActiveTrainers_() {
+  const byTrainer = getReportsData_().byTrainer;
+
+  return {
+    byWorkshopCount: byTrainer.slice().sort((a, b) => b.workshopCount - a.workshopCount).slice(0, 10),
+    byAvgOverall: byTrainer.filter(t => t.avgOverall !== null).slice().sort((a, b) => b.avgOverall - a.avgOverall).slice(0, 10),
+    byParticipants: byTrainer.slice().sort((a, b) => b.totalParticipants - a.totalParticipants).slice(0, 10),
+  };
+}
+
+/**
+ * توصيات إدارية آلية مبنية على قواعد إحصائية ثابتة (وليست ذكاءً اصطناعيًا):
+ * إعادة استضافة مدرب متميز، مراجعة مدرب ضعيف، توسيع/مراجعة نوع نشاط، والتركيز على أفضل فئة مستهدفة.
+ */
+function getRecommendations_() {
+  const reportsData = getReportsData_();
+  const recs = [];
+
+  reportsData.byTrainer.forEach(t => {
+    if (t.avgOverall !== null) {
+      if (t.avgOverall >= 4.5 && t.workshopCount >= 2) {
+        recs.push({ type: 'trainer_rehost', text: 'يوصى بإعادة استضافة المدرب "' + t.trainer + '" — متوسط تقييمه ' + t.avgOverall + ' من 5 عبر ' + t.workshopCount + ' نشاط.' });
+      } else if (t.avgOverall < 3 && t.workshopCount >= 1) {
+        recs.push({ type: 'trainer_review', text: 'يوصى بمراجعة أداء المدرب "' + t.trainer + '" — متوسط تقييمه ' + t.avgOverall + ' من 5.' });
+      }
+    }
+  });
+
+  reportsData.byType.forEach(ty => {
+    if (ty.avgOverall !== null) {
+      if (ty.avgOverall >= 4.5 && ty.workshopCount >= 2) {
+        recs.push({ type: 'type_expand', text: 'يوصى بزيادة عدد برامج "' + ty.type + '" — متوسط تقييمها ' + ty.avgOverall + ' من 5.' });
+      } else if (ty.avgOverall < 3 && ty.workshopCount >= 2) {
+        recs.push({ type: 'type_stop', text: 'يوصى بمراجعة أو إيقاف نوع النشاط "' + ty.type + '" — متوسط تقييمه ' + ty.avgOverall + ' من 5.' });
+      }
+    }
+  });
+
+  const audienceAnalysis = getAudienceAnalysis_();
+  const ratedAudiences = audienceAnalysis.list.filter(a => a.avgOverall !== null);
+  if (ratedAudiences.length) {
+    const best = ratedAudiences.slice().sort((a, b) => b.avgOverall - a.avgOverall)[0];
+    recs.push({ type: 'audience_focus', text: 'يوصى بالتركيز أكثر على استهداف فئة "' + best.audience + '" — أعلى نسبة رضا بمتوسط ' + best.avgOverall + ' من 5.' });
+  }
+
+  return recs;
+}
+
+/** مؤشرات أداء إضافية: نسبة الرضا، متوسط الحضور، معدل النمو السنوي، وسجل الإنجازات */
+function getKPIExtended_() {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+
+  const ratedResponses = responses.filter(r => !isNaN(r.generalRating) && r.generalRating !== null && r.generalRating !== '');
+  const satisfiedCount = ratedResponses.filter(r => r.generalRating >= 4).length;
+  const satisfactionRate = ratedResponses.length ? Math.round((satisfiedCount / ratedResponses.length) * 1000) / 10 : null;
+
+  const avgAttendance = programs.length
+    ? Math.round((programs.reduce((sum, p) => sum + (Number(p.data['عدد المشاركين']) || 0), 0) / programs.length) * 10) / 10
+    : null;
+
+  const now = new Date();
+  const tz = Session.getScriptTimeZone();
+  const curYear = Utilities.formatDate(now, tz, 'yyyy');
+  const lastYear = String(Number(curYear) - 1);
+
+  let curYearCount = 0;
+  let lastYearCount = 0;
+  programs.forEach(p => {
+    const dateStr = String(p.data['التاريخ'] || '');
+    if (dateStr.indexOf(curYear) === 0) curYearCount++;
+    if (dateStr.indexOf(lastYear) === 0) lastYearCount++;
+  });
+
+  let growthRate = null;
+  if (lastYearCount > 0) {
+    growthRate = Math.round(((curYearCount - lastYearCount) / lastYearCount) * 1000) / 10;
+  }
+
+  const distinctTrainers = {};
+  programs.forEach(p => { distinctTrainers[p.data['المدرب'] || 'غير محدد'] = true; });
+
+  return {
+    satisfactionRate: satisfactionRate,
+    avgAttendance: avgAttendance,
+    curYear: curYear,
+    curYearCount: curYearCount,
+    lastYear: lastYear,
+    lastYearCount: lastYearCount,
+    growthRate: growthRate,
+    totalProgramsEver: programs.length,
+    totalParticipantsEver: programs.reduce((sum, p) => sum + (Number(p.data['عدد المشاركين']) || 0), 0),
+    totalDistinctTrainers: Object.keys(distinctTrainers).length,
+  };
+}
+
+/** تقدّم الأهداف السنوية: يقارن أرقام السنة الحالية الفعلية بالأهداف المسجّلة في الإعدادات */
+function getGoalsProgress_() {
+  const settings = getSettings_();
+  const programs = getAllProgramRows_();
+
+  const now = new Date();
+  const tz = Session.getScriptTimeZone();
+  const curYear = Utilities.formatDate(now, tz, 'yyyy');
+
+  let curYearPrograms = 0;
+  let curYearParticipants = 0;
+  programs.forEach(p => {
+    const dateStr = String(p.data['التاريخ'] || '');
+    if (dateStr.indexOf(curYear) === 0) {
+      curYearPrograms++;
+      curYearParticipants += Number(p.data['عدد المشاركين']) || 0;
+    }
+  });
+
+  function pct(actual, target) {
+    if (!target) return null;
+    return Math.round((actual / target) * 1000) / 10;
+  }
+
+  return {
+    year: curYear,
+    targetPrograms: settings.targetPrograms,
+    actualPrograms: curYearPrograms,
+    programsPct: pct(curYearPrograms, settings.targetPrograms),
+    targetParticipants: settings.targetParticipants,
+    actualParticipants: curYearParticipants,
+    participantsPct: pct(curYearParticipants, settings.targetParticipants),
+  };
+}
