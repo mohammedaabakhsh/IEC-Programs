@@ -23,6 +23,7 @@
  *   GET  ?action=kpiExtended           → مؤشرات KPI إضافية (رضا/حضور/نمو سنوي)
  *   GET  ?action=goals                 → تقدّم الأهداف السنوية مقابل الفعلي
  *   GET  ?action=settings              → قراءة الإعدادات (الأهداف والقوائم القابلة للتعديل)
+ *   GET  ?action=trainerProfile&name=<اسم المدرب> → الملف التعريفي الاختياري لمدرب
  *   POST { action:'createWorkshop', name, description, date, time, trainer,
  *          audience, participants, organizer } → إنشاء ورشة جديدة وإرجاع رابط/QR التقييم
  *   POST { action:'updateWorkshop', id, name, description, date, time, trainer,
@@ -31,6 +32,8 @@
  *   POST { action:'generateCertificate', name } → توليد شهادة تقدير PDF بالاسم (base64)
  *   POST { action:'updateSettings', targetPrograms, targetParticipants,
  *          audienceCategories, keywords } → تحديث إعدادات النظام
+ *   POST { action:'updateTrainerProfile', trainer, title, organization, email,
+ *          phone, bio, link, internalNotes } → حفظ/تحديث الملف التعريفي لمدرب
  *
  * ملاحظة: تعبئة نموذج التقييم نفسها تتم مباشرة داخل Google Form (وليس عبر هذا الـ API)،
  * والردود تُحفظ تلقائيًا في ورقة "استجابات التقييم" بواسطة Google Forms.
@@ -135,6 +138,11 @@ function doGet(e) {
       return jsonOutput_({ ok: true, data: getSettings_() });
     }
 
+    if (action === 'trainerProfile') {
+      const trainerName = e.parameter.name;
+      return jsonOutput_({ ok: true, data: getTrainerProfile_(trainerName) });
+    }
+
     return jsonOutput_({ ok: true, message: 'IEC-Programs API يعمل بنجاح.' });
   } catch (err) {
     return jsonOutput_({ ok: false, error: String(err) });
@@ -163,6 +171,10 @@ function doPost(e) {
 
     if (body.action === 'updateSettings') {
       return jsonOutput_(updateSettings_(body));
+    }
+
+    if (body.action === 'updateTrainerProfile') {
+      return jsonOutput_(updateTrainerProfile_(body));
     }
 
     return jsonOutput_({ ok: false, error: 'إجراء غير معروف' });

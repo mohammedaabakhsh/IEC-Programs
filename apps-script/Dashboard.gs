@@ -320,13 +320,56 @@ function getTrainerDetail_(trainerName) {
     };
   }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const badges = getTrainerBadges_(trainerPrograms.length, stats.avgOverall);
+  const trend = getTrainerTrend_(workshops);
+
   return {
     trainer: trainerName,
     workshopCount: trainerPrograms.length,
     totalParticipants: totalParticipants,
     workshops: workshops,
     stats: stats,
+    badges: badges,
+    trend: trend,
   };
+}
+
+/** شارات تلقائية بحسب الأداء والخبرة (لا تحتاج أي إدخال يدوي) */
+function getTrainerBadges_(workshopCount, avgOverall) {
+  const badges = [];
+  if (avgOverall !== null && avgOverall !== undefined && avgOverall >= 4.5 && workshopCount >= 3) {
+    badges.push({ icon: '⭐', label: 'مدرب متميز' });
+  }
+  if (workshopCount >= 10) {
+    badges.push({ icon: '🏅', label: 'مدرب خبير' });
+  }
+  return badges;
+}
+
+/**
+ * مؤشر اتجاه الأداء: يقارن متوسط أقدم نصف الورش بمتوسط أحدث نصفها (الترتيب الزمني).
+ * workshops هنا مرتبة تنازليًا حسب التاريخ (الأحدث أولًا)، فنعكسها للترتيب التصاعدي أولًا.
+ */
+function getTrainerTrend_(workshopsDescByDate) {
+  const asc = workshopsDescByDate.slice().reverse();
+  const rated = asc.filter(w => w.avgOverall !== null && w.avgOverall !== undefined);
+  if (rated.length < 2) {
+    return { direction: 'insufficient', earlyAvg: null, lateAvg: null };
+  }
+
+  const half = Math.ceil(rated.length / 2);
+  const earlyGroup = rated.slice(0, half);
+  const lateGroup = rated.slice(rated.length - half);
+
+  const earlyAvg = avg_(earlyGroup.map(w => w.avgOverall));
+  const lateAvg = avg_(lateGroup.map(w => w.avgOverall));
+  const diff = lateAvg - earlyAvg;
+
+  let direction = 'stable';
+  if (diff >= 0.3) direction = 'improving';
+  else if (diff <= -0.3) direction = 'declining';
+
+  return { direction: direction, earlyAvg: earlyAvg, lateAvg: lateAvg };
 }
 
 /**

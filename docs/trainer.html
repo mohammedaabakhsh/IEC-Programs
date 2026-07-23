@@ -40,6 +40,30 @@
   </main>
 </div>
 
+<div class="modal-overlay" id="profileModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>الملف التعريفي للمدرب</h3>
+      <button class="icon-btn" id="closeProfileModal">✕</button>
+    </div>
+    <div id="profileModalBody">
+      <form id="profileForm">
+        <div class="form-row"><label>المنصب / اللقب</label><input type="text" id="p_title" placeholder="مثال: مستشار تسويق رقمي"></div>
+        <div class="form-row"><label>جهة العمل</label><input type="text" id="p_organization"></div>
+        <div class="form-row two-col">
+          <div><label>البريد الإلكتروني</label><input type="email" id="p_email"></div>
+          <div><label>رقم التواصل</label><input type="text" id="p_phone"></div>
+        </div>
+        <div class="form-row"><label>رابط شخصي (لينكدإن/موقع)</label><input type="text" id="p_link" placeholder="https://"></div>
+        <div class="form-row"><label>نبذة تعريفية</label><textarea id="p_bio" rows="3"></textarea></div>
+        <div class="form-row"><label>ملاحظات داخلية (خاصة بالإدارة، ما تظهر للمشاركين)</label><textarea id="p_internalNotes" rows="3"></textarea></div>
+        <div id="profileFormError" class="error-state" style="display:none;"></div>
+        <button type="submit" class="btn" style="width:100%;">حفظ الملف التعريفي</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script src="assets/config.js"></script>
 <script src="assets/trainer.js"></script>
 </body>
