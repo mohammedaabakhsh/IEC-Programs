@@ -53,7 +53,7 @@ header.app-header p { margin: 0; font-size: 13px; opacity: .85; }
   flex-wrap: wrap;
 }
 
-button.btn {
+.btn {
   background: var(--primary);
   color: #fff;
   border: none;
@@ -66,14 +66,14 @@ button.btn {
   transition: background .15s, transform .1s;
   box-shadow: 0 6px 16px rgba(47, 103, 56, .18);
 }
-button.btn:hover { background: var(--primary-dark); }
-button.btn:active { transform: translateY(1px); }
-button.btn.secondary {
+.btn:hover { background: var(--primary-dark); }
+.btn:active { transform: translateY(1px); }
+.btn.secondary {
   background: var(--chip-bg);
   color: var(--primary-dark);
   box-shadow: none;
 }
-button.btn.secondary:hover { background: #e2ecda; }
+.btn.secondary:hover { background: #e2ecda; }
 
 a.btn { display: inline-block; text-decoration: none; }
 

@@ -328,3 +328,79 @@ function getTrainerDetail_(trainerName) {
     stats: stats,
   };
 }
+
+/**
+ * بيانات "لوحة التحكم" الرئيسية: مؤشرات سريعة عن كل النظام (إجمالي ورش/برامج،
+ * إجمالي مشاركين، متوسط تقييم عام، أعلى مدرب، أكثر نوع نشاط، عدد الورش هذا الشهر/السنة).
+ */
+function getDashboardStats_() {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+  const overallStats = computeStats_(responses);
+
+  const now = new Date();
+  const tz = Session.getScriptTimeZone();
+  const curYearMonth = Utilities.formatDate(now, tz, 'yyyy-MM');
+  const curYear = Utilities.formatDate(now, tz, 'yyyy');
+
+  let totalParticipants = 0;
+  let thisMonthCount = 0;
+  let thisYearCount = 0;
+  const typeCounts = {};
+  const trainerMap = {};
+
+  programs.forEach(p => {
+    const n = Number(p.data['عدد المشاركين']);
+    if (!isNaN(n)) totalParticipants += n;
+
+    const type = p.data['نوع النشاط'] || 'غير محدد';
+    typeCounts[type] = (typeCounts[type] || 0) + 1;
+
+    const dateStr = String(p.data['التاريخ'] || '');
+    if (dateStr.indexOf(curYearMonth) === 0) thisMonthCount++;
+    if (dateStr.indexOf(curYear) === 0) thisYearCount++;
+
+    const trainer = p.data['المدرب'] || 'غير محدد';
+    const id = String(p.data['المعرف']);
+    if (!trainerMap[trainer]) trainerMap[trainer] = [];
+    trainerMap[trainer].push(id);
+  });
+
+  // أعلى مدرب تقييمًا (بأعلى متوسط عام، من بين من لديهم ردود فعلية)
+  let topTrainer = null;
+  let topTrainerAvg = null;
+  Object.keys(trainerMap).forEach(trainer => {
+    const ids = trainerMap[trainer];
+    const tResponses = responses.filter(r => ids.indexOf(String(r.programId)) !== -1);
+    const avg = computeStats_(tResponses).avgOverall;
+    if (avg !== null && (topTrainerAvg === null || avg > topTrainerAvg)) {
+      topTrainerAvg = avg;
+      topTrainer = trainer;
+    }
+  });
+
+  // أكثر نوع نشاط تم تنفيذه
+  let mostCommonType = null;
+  let mostCommonTypeCount = 0;
+  Object.keys(typeCounts).forEach(type => {
+    if (typeCounts[type] > mostCommonTypeCount) {
+      mostCommonTypeCount = typeCounts[type];
+      mostCommonType = type;
+    }
+  });
+
+  return {
+    totalWorkshops: typeCounts['ورشة عمل'] || 0,
+    totalPrograms: typeCounts['برنامج'] || 0,
+    totalSessions: typeCounts['جلسة'] || 0,
+    totalActivities: programs.length,
+    totalParticipants: totalParticipants,
+    avgOverall: overallStats.avgOverall,
+    topTrainer: topTrainer,
+    topTrainerAvg: topTrainerAvg,
+    mostCommonType: mostCommonType,
+    mostCommonTypeCount: mostCommonTypeCount,
+    thisMonthCount: thisMonthCount,
+    thisYearCount: thisYearCount,
+  };
+}

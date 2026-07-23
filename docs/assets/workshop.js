@@ -216,7 +216,7 @@
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'تعذّر حذف الورشة');
 
-      window.location.href = 'index.html';
+      window.location.href = 'workshops.html';
     } catch (err) {
       alert('حدث خطأ أثناء الحذف: ' + err.message);
     }

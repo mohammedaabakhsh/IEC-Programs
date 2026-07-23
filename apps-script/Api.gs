@@ -7,6 +7,7 @@
  *   GET  ?action=workshop&id=<المعرف> → تفاصيل وإحصاءات ورشة واحدة
  *   GET  ?action=reports                → تحليلات عامة: حسب المدرب، حسب نوع النشاط، وأحدث الملاحظات
  *   GET  ?action=trainer&name=<اسم المدرب> → صفحة تفاصيل مدرب واحد (كل ورشه وإحصاءاته)
+ *   GET  ?action=dashboard             → مؤشرات لوحة التحكم الرئيسية (KPIs سريعة)
  *   POST { action:'createWorkshop', name, description, date, time, trainer,
  *          audience, participants, organizer } → إنشاء ورشة جديدة وإرجاع رابط/QR التقييم
  *   POST { action:'updateWorkshop', id, name, description, date, time, trainer,
@@ -42,6 +43,10 @@ function doGet(e) {
       const detail = getTrainerDetail_(trainerName);
       if (!detail) return jsonOutput_({ ok: false, error: 'المدرب غير موجود' });
       return jsonOutput_({ ok: true, data: detail });
+    }
+
+    if (action === 'dashboard') {
+      return jsonOutput_({ ok: true, data: getDashboardStats_() });
     }
 
     return jsonOutput_({ ok: true, message: 'IEC-Programs API يعمل بنجاح.' });
