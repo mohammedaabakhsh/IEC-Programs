@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تفاصيل المدرب</title>
+<title>أداة المقارنة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
@@ -28,12 +28,35 @@
 
   <main class="main-content">
     <header class="app-header">
-      <h1 id="pageTitle">تفاصيل المدرب</h1>
+      <h1>⚖️ أداة المقارنة</h1>
       <p><a href="reports.html" style="color:#fff;">→ العودة للتقارير</a></p>
     </header>
 
     <div class="page-content">
-      <div id="content"><div class="loading-state">جاري التحميل...</div></div>
+      <div class="card">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="min-width:160px;">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">قارن حسب</label>
+            <select id="dimensionSelect">
+              <option value="trainer">المدرب</option>
+              <option value="type">نوع النشاط</option>
+              <option value="year">السنة</option>
+              <option value="organizer">الجهة المنظمة</option>
+            </select>
+          </div>
+          <div style="min-width:200px;flex:1;">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">الطرف الأول</label>
+            <select id="value1Select"></select>
+          </div>
+          <div style="min-width:200px;flex:1;">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">الطرف الثاني</label>
+            <select id="value2Select"></select>
+          </div>
+          <button class="btn" id="compareBtn" type="button">قارن</button>
+        </div>
+      </div>
+
+      <div id="content"></div>
     </div>
 
     <footer>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</footer>
@@ -41,6 +64,6 @@
 </div>
 
 <script src="assets/config.js"></script>
-<script src="assets/trainer.js"></script>
+<script src="assets/compare.js"></script>
 </body>
 </html>

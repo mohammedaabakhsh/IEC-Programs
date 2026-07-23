@@ -6,6 +6,16 @@
   const closeModal = document.getElementById('closeModal');
   const modalBody = document.getElementById('modalBody');
 
+  const filterSearch = document.getElementById('filterSearch');
+  const filterType = document.getElementById('filterType');
+  const filterYear = document.getElementById('filterYear');
+  const filterMonth = document.getElementById('filterMonth');
+  const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+  const MONTH_NAMES_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+  let allWorkshops = [];
+
   function isConfigured() {
     return APP_CONFIG.API_URL && APP_CONFIG.API_URL.indexOf('PASTE_YOUR') === -1;
   }
@@ -20,16 +30,74 @@
       const res = await fetch(APP_CONFIG.API_URL + '?action=workshops');
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'خطأ غير معروف');
-      renderList(json.data);
+      allWorkshops = json.data || [];
+      populateFilterOptions();
+      applyFiltersAndRender();
       statusMsg.textContent = 'آخر تحديث: ' + new Date().toLocaleString('ar-SA');
     } catch (err) {
       listContainer.innerHTML = '<div class="error-state">تعذّر تحميل البيانات: ' + err.message + '</div>';
     }
   }
 
+  function populateFilterOptions() {
+    const types = {};
+    const years = {};
+    allWorkshops.forEach(w => {
+      if (w.type) types[w.type] = true;
+      const y = String(w.date || '').substring(0, 4);
+      if (y) years[y] = true;
+    });
+
+    filterType.innerHTML = '<option value="">الكل</option>' +
+      Object.keys(types).sort().map(t => '<option value="' + escapeHtml_(t) + '">' + escapeHtml_(t) + '</option>').join('');
+
+    filterYear.innerHTML = '<option value="">الكل</option>' +
+      Object.keys(years).sort().reverse().map(y => '<option value="' + y + '">' + y + '</option>').join('');
+
+    filterMonth.innerHTML = '<option value="">الكل</option>' +
+      MONTH_NAMES_AR.map((m, i) => '<option value="' + String(i + 1).padStart(2, '0') + '">' + m + '</option>').join('');
+  }
+
+  function applyFiltersAndRender() {
+    const search = filterSearch.value.trim().toLowerCase();
+    const type = filterType.value;
+    const year = filterYear.value;
+    const month = filterMonth.value;
+
+    const filtered = allWorkshops.filter(w => {
+      if (type && w.type !== type) return false;
+      if (year && String(w.date || '').substring(0, 4) !== year) return false;
+      if (month && String(w.date || '').substring(5, 7) !== month) return false;
+      if (search) {
+        const haystack = ((w.name || '') + ' ' + (w.trainer || '') + ' ' + (w.organizer || '')).toLowerCase();
+        if (haystack.indexOf(search) === -1) return false;
+      }
+      return true;
+    });
+
+    renderList(filtered);
+  }
+
+  [filterSearch, filterType, filterYear, filterMonth].forEach(el => {
+    el.addEventListener('input', applyFiltersAndRender);
+    el.addEventListener('change', applyFiltersAndRender);
+  });
+
+  clearFiltersBtn.addEventListener('click', () => {
+    filterSearch.value = '';
+    filterType.value = '';
+    filterYear.value = '';
+    filterMonth.value = '';
+    applyFiltersAndRender();
+  });
+
   function renderList(workshops) {
-    if (!workshops || workshops.length === 0) {
+    if (!allWorkshops || allWorkshops.length === 0) {
       listContainer.innerHTML = '<div class="empty-state">لا توجد ورش بعد. اضغط "إضافة ورشة جديدة" لبدء أول ورشة.</div>';
+      return;
+    }
+    if (!workshops || workshops.length === 0) {
+      listContainer.innerHTML = '<div class="empty-state">ما فيه نتائج مطابقة للفلاتر الحالية.</div>';
       return;
     }
     let html = '<div class="workshop-grid">';
@@ -51,14 +119,30 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  async function loadAudienceOptions() {
+    const select = document.getElementById('f_audience');
+    if (!select || !isConfigured()) return;
+    try {
+      const res = await fetch(APP_CONFIG.API_URL + '?action=settings');
+      const json = await res.json();
+      if (!json.ok) return;
+      const categories = json.data.audienceCategories || [];
+      select.innerHTML = '<option value="">اختر الفئة</option>' +
+        categories.map(c => '<option>' + escapeHtml_(c) + '</option>').join('');
+    } catch (err) {
+      // تجاهل بهدوء — الحقل يبقى بخيار افتراضي فقط
+    }
+  }
+
   const originalFormHtml = modalBody.innerHTML;
 
-  function openModal() { modalOverlay.classList.add('open'); }
+  function openModal() { modalOverlay.classList.add('open'); loadAudienceOptions(); }
   function closeModalFn() { modalOverlay.classList.remove('open'); resetForm(); }
 
   function resetForm() {
     modalBody.innerHTML = originalFormHtml;
     document.getElementById('addForm').addEventListener('submit', onCreateWorkshop);
+    loadAudienceOptions();
   }
 
   addBtn.addEventListener('click', openModal);
@@ -66,6 +150,7 @@
   modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModalFn(); });
 
   document.getElementById('addForm').addEventListener('submit', onCreateWorkshop);
+  loadAudienceOptions();
 
   async function onCreateWorkshop(e) {
     e.preventDefault();
@@ -80,7 +165,7 @@
       date: document.getElementById('f_date').value,
       time: document.getElementById('f_time').value,
       trainer: document.getElementById('f_trainer').value.trim(),
-      audience: document.getElementById('f_audience').value.trim(),
+      audience: document.getElementById('f_audience').value,
       participants: document.getElementById('f_participants').value,
       organizer: document.getElementById('f_organizer').value.trim(),
     };

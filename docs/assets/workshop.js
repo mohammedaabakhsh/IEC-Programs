@@ -140,14 +140,32 @@
     return (v === null || v === undefined || isNaN(v)) ? '—' : v + ' / 5';
   }
 
-  function openEditModal() {
+  async function loadAudienceOptions_(selectedValue) {
+    const select = document.getElementById('e_audience');
+    let categories = [];
+    if (isConfigured()) {
+      try {
+        const res = await fetch(APP_CONFIG.API_URL + '?action=settings');
+        const json = await res.json();
+        if (json.ok) categories = json.data.audienceCategories || [];
+      } catch (err) {
+        // تجاهل بهدوء
+      }
+    }
+    if (selectedValue && categories.indexOf(selectedValue) === -1) categories = categories.concat([selectedValue]);
+    select.innerHTML = '<option value="">اختر الفئة</option>' +
+      categories.map(c => '<option>' + escapeHtml_(c) + '</option>').join('');
+    select.value = selectedValue || '';
+  }
+
+  async function openEditModal() {
     document.getElementById('e_name').value = currentWorkshop.name || '';
     document.getElementById('e_type').value = currentWorkshop.type || '';
     document.getElementById('e_description').value = currentWorkshop.description || '';
     document.getElementById('e_date').value = currentWorkshop.date || '';
     document.getElementById('e_time').value = currentWorkshop.time || '';
     document.getElementById('e_trainer').value = currentWorkshop.trainer || '';
-    document.getElementById('e_audience').value = currentWorkshop.audience || '';
+    await loadAudienceOptions_(currentWorkshop.audience || '');
     document.getElementById('e_participants').value = currentWorkshop.participants || '';
     document.getElementById('e_organizer').value = currentWorkshop.organizer || '';
     document.getElementById('editFormError').style.display = 'none';
