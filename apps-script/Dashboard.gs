@@ -239,6 +239,9 @@ function getReportsData_() {
       totalParticipants: info.totalParticipants,
       responseCount: stats.count,
       avgOverall: stats.avgOverall,
+      avgContentCategory: stats.avgContentCategory,
+      avgTrainerCategory: stats.avgTrainerCategory,
+      comments: stats.comments,
     };
   }).sort((a, b) => (b.avgOverall || 0) - (a.avgOverall || 0));
 
@@ -247,17 +250,24 @@ function getReportsData_() {
   programs.forEach(p => {
     const type = p.data['نوع النشاط'] || 'غير محدد';
     const id = String(p.data['المعرف']);
-    if (!typeMap[type]) typeMap[type] = { ids: [], workshopCount: 0 };
+    const participants = Number(p.data['عدد المشاركين']) || 0;
+    if (!typeMap[type]) typeMap[type] = { ids: [], workshopCount: 0, totalParticipants: 0 };
     typeMap[type].ids.push(id);
     typeMap[type].workshopCount += 1;
+    typeMap[type].totalParticipants += participants;
   });
 
   const byType = Object.keys(typeMap).map(type => {
     const info = typeMap[type];
     const typeResponses = responses.filter(r => info.ids.indexOf(String(r.programId)) !== -1);
     const stats = computeStats_(typeResponses);
-    return { type: type, workshopCount: info.workshopCount, avgOverall: stats.avgOverall };
-  }).sort((a, b) => b.workshopCount - a.workshopCount);
+    return {
+      type: type,
+      workshopCount: info.workshopCount,
+      totalParticipants: info.totalParticipants,
+      avgOverall: stats.avgOverall,
+    };
+  }).sort((a, b) => (b.avgOverall || 0) - (a.avgOverall || 0));
 
   // أحدث الملاحظات من كل الورش (الأحدث أولًا)
   const recentComments = responses

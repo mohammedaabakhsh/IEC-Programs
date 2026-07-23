@@ -48,13 +48,17 @@
     if (d.byType && d.byType.length > 0) {
       html += '<div class="card"><h3 style="margin-top:0;">التوزيع حسب نوع النشاط</h3>' +
         '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
-        d.byType.map(t =>
-          '<div style="background:var(--chip-bg);border-radius:14px;padding:12px 18px;min-width:140px;">' +
-          '<div style="font-weight:800;color:var(--primary-dark);">' + escapeHtml_(t.type) + '</div>' +
-          '<div style="font-size:12.5px;color:var(--muted);margin-top:4px;">' + t.workshopCount + ' نشاط — متوسط ' + fmtAvg(t.avgOverall) + '</div>' +
-          '</div>'
-        ).join('') +
-        '</div></div>';
+        d.byType.map((t, i) => {
+          const badge = (i === 0 && d.byType.length > 1) ? ' 🏆' : (i === d.byType.length - 1 && d.byType.length > 1 ? ' 🔻' : '');
+          return '<div style="background:var(--chip-bg);border-radius:14px;padding:12px 18px;min-width:160px;">' +
+            '<div style="font-weight:800;color:var(--primary-dark);">' + escapeHtml_(t.type) + badge + '</div>' +
+            '<div style="font-size:12.5px;color:var(--muted);margin-top:4px;">' + t.workshopCount + ' نشاط · ' + t.totalParticipants + ' مشارك</div>' +
+            '<div style="font-size:12.5px;color:var(--muted);margin-top:2px;">متوسط التقييم: ' + fmtAvg(t.avgOverall) + '</div>' +
+            '</div>';
+        }).join('') +
+        '</div>' +
+        (d.byType.length > 1 ? '<div style="font-size:11.5px;color:var(--muted);margin-top:10px;">🏆 الأعلى تقييمًا · 🔻 الأقل تقييمًا</div>' : '') +
+        '</div>';
     }
 
     // تحليل حسب المدرب
@@ -62,15 +66,25 @@
       html += '<div class="card"><h3 style="margin-top:0;">تحليل الأداء حسب المدرب</h3>';
       d.byTrainer.forEach(t => {
         const pct = (t.avgOverall !== null && t.avgOverall !== undefined) ? Math.round((t.avgOverall / 5) * 100) : 0;
-        html += '<div style="margin-bottom:16px;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+        html += '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">' +
           '<strong>' + escapeHtml_(t.trainer) + '</strong>' +
           '<span style="font-size:12.5px;color:var(--muted);">' + t.workshopCount + ' ورشة/برنامج · ' + t.totalParticipants + ' مشارك · ' + t.responseCount + ' رد</span>' +
           '</div>' +
           '<div style="background:var(--chip-bg);border-radius:999px;height:10px;overflow:hidden;">' +
           '<div style="background:linear-gradient(90deg,var(--accent),var(--primary));height:100%;width:' + pct + '%;border-radius:999px;"></div>' +
           '</div>' +
-          '<div style="font-size:12px;color:var(--muted);margin-top:4px;">متوسط التقييم: ' + fmtAvg(t.avgOverall) + '</div>' +
+          '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px;">' +
+          '<span>المتوسط العام: <strong style="color:var(--primary-dark);">' + fmtAvg(t.avgOverall) + '</strong></span>' +
+          '<span>محور المحتوى: <strong style="color:var(--primary-dark);">' + fmtAvg(t.avgContentCategory) + '</strong></span>' +
+          '<span>محور المدرب: <strong style="color:var(--primary-dark);">' + fmtAvg(t.avgTrainerCategory) + '</strong></span>' +
+          '</div>' +
+          (t.comments && t.comments.length > 0
+            ? '<details style="margin-top:10px;"><summary style="cursor:pointer;font-size:12.5px;color:var(--accent);font-weight:700;">عرض ملاحظات المشاركين عنه (' + t.comments.length + ')</summary>' +
+              '<div style="margin-top:8px;">' +
+              t.comments.map(c => '<div class="comment-item">' + escapeHtml_(c.text) + '</div>').join('') +
+              '</div></details>'
+            : '') +
           '</div>';
       });
       html += '</div>';
