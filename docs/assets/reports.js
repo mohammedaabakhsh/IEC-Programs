@@ -68,7 +68,7 @@
         const pct = (t.avgOverall !== null && t.avgOverall !== undefined) ? Math.round((t.avgOverall / 5) * 100) : 0;
         html += '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">' +
-          '<strong>' + escapeHtml_(t.trainer) + '</strong>' +
+          '<a href="trainer.html?name=' + encodeURIComponent(t.trainer) + '" style="color:var(--primary-dark);font-weight:700;text-decoration:none;font-size:15px;">' + escapeHtml_(t.trainer) + '</a>' +
           '<span style="font-size:12.5px;color:var(--muted);">' + t.workshopCount + ' ورشة/برنامج · ' + t.totalParticipants + ' مشارك · ' + t.responseCount + ' رد</span>' +
           '</div>' +
           '<div style="background:var(--chip-bg);border-radius:999px;height:10px;overflow:hidden;">' +

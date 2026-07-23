@@ -286,3 +286,45 @@ function getReportsData_() {
     recentComments: recentComments,
   };
 }
+
+/**
+ * بيانات صفحة تفاصيل مدرب واحد: كل ورشه، إحصاءات كل ورشة على حدة، والإحصاءات
+ * الإجمالية (متوسط عام + محاور + كل تعليقاته) مجمّعة من كل ورشه.
+ */
+function getTrainerDetail_(trainerName) {
+  const programs = getAllProgramRows_();
+  const responses = getAllResponses_();
+
+  const trainerPrograms = programs.filter(p => (p.data['المدرب'] || 'غير محدد') === trainerName);
+  if (trainerPrograms.length === 0) return null;
+
+  const ids = trainerPrograms.map(p => String(p.data['المعرف']));
+  const trainerResponses = responses.filter(r => ids.indexOf(String(r.programId)) !== -1);
+  const stats = computeStats_(trainerResponses);
+
+  let totalParticipants = 0;
+  const workshops = trainerPrograms.map(p => {
+    const wId = p.data['المعرف'];
+    const wResponses = responses.filter(r => String(r.programId) === String(wId));
+    const wStats = computeStats_(wResponses);
+    const participants = Number(p.data['عدد المشاركين']) || 0;
+    totalParticipants += participants;
+    return {
+      id: wId,
+      name: p.data['اسم الورشة'],
+      type: p.data['نوع النشاط'],
+      date: p.data['التاريخ'],
+      participants: participants,
+      responseCount: wStats.count,
+      avgOverall: wStats.avgOverall,
+    };
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return {
+    trainer: trainerName,
+    workshopCount: trainerPrograms.length,
+    totalParticipants: totalParticipants,
+    workshops: workshops,
+    stats: stats,
+  };
+}
