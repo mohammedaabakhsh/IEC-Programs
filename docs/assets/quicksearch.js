@@ -1,4 +1,13 @@
 (function () {
+  // تحميل طبقة تحسين الجوال مرة واحدة في جميع صفحات النظام.
+  if (!document.querySelector('link[data-mobile-ui]')) {
+    const mobileStyles = document.createElement('link');
+    mobileStyles.rel = 'stylesheet';
+    mobileStyles.href = 'assets/mobile.css';
+    mobileStyles.dataset.mobileUi = 'true';
+    document.head.appendChild(mobileStyles);
+  }
+
   const input = document.getElementById('quickSearchInput');
   const resultsBox = document.getElementById('quickSearchResults');
   if (!input || !resultsBox) return;

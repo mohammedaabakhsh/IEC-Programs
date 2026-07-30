@@ -35,41 +35,43 @@
 
   function refreshButton() {
     return '<div style="text-align:left;margin-bottom:10px;">' +
-      '<button class="btn secondary" id="refreshDashboardBtn" type="button" style="font-size:12px;padding:7px 14px;">🔄 تحديث</button>' +
+      '<button class="btn secondary" id="refreshDashboardBtn" type="button" style="font-size:12px;padding:7px 14px;">تحديث</button>' +
       '</div>';
   }
 
   function render(d, k, g) {
     let html = refreshButton();
 
-    // حالة بداية ودّية لو ما فيه بيانات بعد
     if (!k.totalProgramsEver || k.totalProgramsEver === 0) {
       html += '<div class="card" style="text-align:center;padding:40px 20px;">' +
         '<div style="font-size:40px;margin-bottom:10px;">🚀</div>' +
         '<h3 style="margin:0 0 8px;">أهلًا بك في نظام إدارة برامج وورش المركز</h3>' +
-        '<p style="color:var(--muted);font-size:13.5px;max-width:420px;margin:0 auto 18px;">ما عندك أي ورشة أو برنامج مسجّل بعد. أضف أول ورشة وابدأ بمتابعة كل شي: روابط التقييم، الحضور، التحليلات، وكل التفاصيل من مكان واحد.</p>' +
-        '<a href="workshops.html" class="btn" style="text-decoration:none;">➕ أضف أول ورشة</a>' +
+        '<p style="color:var(--muted);font-size:13.5px;max-width:420px;margin:0 auto 18px;">ابدأ بإضافة أول ورشة، وبعدها ستظهر لك أهم مؤشرات الأداء والتقييم والحضور هنا.</p>' +
+        '<a href="workshops.html" class="btn" style="text-decoration:none;">إضافة أول ورشة</a>' +
         '</div>';
       content.innerHTML = html;
       wireRefresh();
       return;
     }
 
-    // سجل الإنجازات
-    html += '<div class="card" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;">' +
-      '<h3 style="margin-top:0;color:#fff;">🏆 سجل الإنجازات</h3>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:24px;font-size:14px;">' +
-      '<div><div style="font-size:26px;font-weight:800;">' + k.totalProgramsEver + '</div><div style="opacity:.85;">برنامج/ورشة تم تنفيذها</div></div>' +
-      '<div><div style="font-size:26px;font-weight:800;">' + k.totalParticipantsEver + '</div><div style="opacity:.85;">مشارك تم تدريبهم</div></div>' +
-      '<div><div style="font-size:26px;font-weight:800;">' + fmtPct(k.satisfactionRate) + '</div><div style="opacity:.85;">نسبة رضا المشاركين</div></div>' +
-      '<div><div style="font-size:26px;font-weight:800;">' + k.totalDistinctTrainers + '</div><div style="opacity:.85;">مدرب مختلف شارك بالتقديم</div></div>' +
+    html += '<div class="dashboard-mobile-action">' +
+      '<a href="workshops.html" class="btn">إضافة ورشة أو برنامج</a>' +
+      '</div>';
+
+    html += '<div class="card dashboard-achievements" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;">' +
+      '<h3 style="margin-top:0;color:#fff;">ملخص الأداء</h3>' +
+      '<div class="achievement-items" style="display:flex;flex-wrap:wrap;gap:24px;font-size:14px;">' +
+      '<div><div style="font-size:26px;font-weight:800;">' + k.totalProgramsEver + '</div><div style="opacity:.85;">برنامج وورشة</div></div>' +
+      '<div><div style="font-size:26px;font-weight:800;">' + k.totalParticipantsEver + '</div><div style="opacity:.85;">مشارك</div></div>' +
+      '<div><div style="font-size:26px;font-weight:800;">' + fmtPct(k.satisfactionRate) + '</div><div style="opacity:.85;">رضا المشاركين</div></div>' +
+      '<div><div style="font-size:26px;font-weight:800;">' + k.totalDistinctTrainers + '</div><div style="opacity:.85;">مدرب</div></div>' +
       '</div></div>';
 
-    html += '<div class="kpi-grid" style="margin-top:18px;">' +
-      kpi(d.totalWorkshops, 'إجمالي عدد الورش') +
-      kpi(d.totalPrograms, 'إجمالي عدد البرامج') +
-      kpi(d.totalParticipants, 'إجمالي المشاركين') +
-      kpi(fmtAvg(d.avgOverall), 'متوسط التقييم العام') +
+    html += '<div class="kpi-grid dashboard-kpis" style="margin-top:18px;">' +
+      kpi(d.totalWorkshops, 'إجمالي الورش') +
+      kpi(d.totalPrograms, 'إجمالي البرامج') +
+      kpi(d.totalParticipants, 'المشاركون') +
+      kpi(fmtAvg(d.avgOverall), 'متوسط التقييم') +
       kpi(
         d.topTrainer
           ? '<a href="trainer.html?name=' + encodeURIComponent(d.topTrainer) + '" style="color:var(--primary);text-decoration:none;">' + escapeHtml_(d.topTrainer) + '</a>'
@@ -80,31 +82,30 @@
         d.mostCommonType ? escapeHtml_(d.mostCommonType) : '—',
         'أكثر نوع نشاط تنفيذًا' + (d.mostCommonType ? ' (' + d.mostCommonTypeCount + ')' : '')
       ) +
-      kpi(d.thisMonthCount, 'عدد الورش هذا الشهر') +
-      kpi(d.thisYearCount, 'عدد الورش هذه السنة') +
-      kpi(fmtPct(k.satisfactionRate), 'نسبة رضا المشاركين') +
-      kpi(k.avgAttendance !== null ? k.avgAttendance : '—', 'متوسط الحضور لكل نشاط') +
+      kpi(d.thisMonthCount, 'ورش هذا الشهر') +
+      kpi(d.thisYearCount, 'ورش هذه السنة') +
+      kpi(fmtPct(k.satisfactionRate), 'نسبة الرضا') +
+      kpi(k.avgAttendance !== null ? k.avgAttendance : '—', 'متوسط الحضور') +
       kpi(
         k.growthRate === null ? '—' : (k.growthRate >= 0 ? '+' : '') + k.growthRate + '%',
-        'نمو عدد البرامج (' + k.curYear + ' مقابل ' + k.lastYear + ')'
+        'نمو البرامج (' + k.curYear + ' مقابل ' + k.lastYear + ')'
       ) +
       '</div>';
 
-    // تقدم الأهداف السنوية
-    html += '<div class="card" style="margin-top:18px;">' +
-      '<h3 style="margin-top:0;">🎯 تقدّم أهداف سنة ' + g.year + '</h3>' +
+    html += '<div class="card dashboard-goals" style="margin-top:18px;">' +
+      '<h3 style="margin-top:0;">تقدّم أهداف سنة ' + g.year + '</h3>' +
       goalBar('عدد البرامج المنفذة', g.actualPrograms, g.targetPrograms, g.programsPct) +
       goalBar('عدد المشاركين', g.actualParticipants, g.targetParticipants, g.participantsPct) +
-      '<p style="font-size:12px;color:var(--muted);margin-bottom:0;">تقدر تعدّل الأهداف من صفحة <a href="settings.html" style="color:var(--primary-dark);font-weight:700;">⚙️ الإعدادات</a>.</p>' +
+      '<p style="font-size:12px;color:var(--muted);margin-bottom:0;">يمكن تعديل الأهداف من صفحة <a href="settings.html" style="color:var(--primary-dark);font-weight:700;">الإعدادات</a>.</p>' +
       '</div>';
 
-    html += '<div class="card" style="margin-top:18px;">' +
+    html += '<div class="card dashboard-shortcuts" style="margin-top:18px;">' +
       '<h3 style="margin-top:0;">اختصارات سريعة</h3>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
-      '<a href="workshops.html" class="btn" style="text-decoration:none;">📋 الورش والبرامج</a>' +
-      '<a href="reports.html" class="btn secondary" style="text-decoration:none;">📊 التقارير والتحليلات</a>' +
-      '<a href="certificate.html" class="btn secondary" style="text-decoration:none;">🏅 توليد شهادة</a>' +
-      '<a href="settings.html" class="btn secondary" style="text-decoration:none;">⚙️ الإعدادات</a>' +
+      '<a href="workshops.html" class="btn">الورش والبرامج</a>' +
+      '<a href="reports.html" class="btn secondary">التقارير</a>' +
+      '<a href="certificate.html" class="btn secondary">الشهادات</a>' +
+      '<a href="settings.html" class="btn secondary">الإعدادات</a>' +
       '</div></div>';
 
     content.innerHTML = html;
