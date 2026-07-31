@@ -1,0 +1,12 @@
+{
+  "name": "نظام برامج مركز الابتكار وريادة الأعمال",
+  "short_name": "برامج المركز",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f8f5",
+  "theme_color": "#214c2b",
+  "lang": "ar",
+  "dir": "rtl",
+  "description": "إدارة الورش والبرامج والتقييمات والتقارير من مكان واحد"
+}

@@ -2,50 +2,40 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم — نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#214c2b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>لوحة التحكم — مركز الابتكار وريادة الأعمال</title>
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="stylesheet" href="assets/professional.css">
 </head>
 <body>
-
 <div class="app-shell">
   <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">IEC</div>
-      <div><strong>مركز الابتكار</strong><span>وريادة الأعمال</span></div>
-    </div>
-    <div class="sidebar-search" style="padding:0 0 16px;position:relative;">
-      <input type="text" id="quickSearchInput" placeholder="🔍 بحث سريع..." autocomplete="off"
-        style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-size:12.5px;outline:none;">
-      <div id="quickSearchResults" style="display:none;position:absolute;top:calc(100% + 4px);right:0;left:0;background:#fff;border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.22);max-height:280px;overflow-y:auto;z-index:60;"></div>
-    </div>
+    <div class="brand"><div class="brand-mark">IEC</div><div><strong>مركز الابتكار</strong><span>وريادة الأعمال</span></div></div>
+    <div class="sidebar-search"><input type="text" id="quickSearchInput" placeholder="بحث سريع..." autocomplete="off"><div id="quickSearchResults"></div></div>
     <nav class="nav-list">
-      <a href="index.html" class="nav-item active"><span class="ic">🏠</span> لوحة التحكم</a>
-      <a href="workshops.html" class="nav-item"><span class="ic">📋</span> الورش والبرامج</a>
-      <a href="reports.html" class="nav-item"><span class="ic">📊</span> التقارير والتحليلات</a>
-      <a href="certificate.html" class="nav-item"><span class="ic">🏅</span> توليد الشهادات</a>
-      <a href="settings.html" class="nav-item"><span class="ic">⚙️</span> الإعدادات</a>
+      <a href="index.html" class="nav-item active"><span class="ic">⌂</span> لوحة التحكم</a>
+      <a href="workshops.html" class="nav-item"><span class="ic">▣</span> الورش والبرامج</a>
+      <a href="reports.html" class="nav-item"><span class="ic">◔</span> التقارير والتحليلات</a>
+      <a href="certificate.html" class="nav-item"><span class="ic">◇</span> الشهادات</a>
+      <a href="settings.html" class="nav-item"><span class="ic">⚙</span> الإعدادات</a>
     </nav>
     <div class="sidebar-foot">نظام إدارة برامج وورش<br>مركز الابتكار وريادة الأعمال</div>
   </aside>
-
   <main class="main-content">
-    <header class="app-header">
-      <h1>🏠 لوحة التحكم</h1>
-      <p>نظرة سريعة وعامة على أداء الورش والبرامج</p>
-    </header>
-
-    <div class="page-content">
-      <div id="content"><div class="loading-state">جاري تحميل المؤشرات...</div></div>
-    </div>
-
-    <footer>نظام إدارة برامج وورش مركز الابتكار وريادة الأعمال</footer>
+    <header class="app-header"><h1>لوحة التحكم</h1><p>متابعة الأداء والورش والتنبيهات من مكان واحد</p></header>
+    <div class="page-content"><div id="content"></div></div>
+    <footer>مركز الابتكار وريادة الأعمال</footer>
   </main>
 </div>
-
 <script src="assets/config.js"></script>
+<script src="assets/ui-core.js"></script>
 <script src="assets/dashboard.js"></script>
 <script src="assets/quicksearch.js"></script>
 </body>
