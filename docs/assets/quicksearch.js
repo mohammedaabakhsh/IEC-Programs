@@ -32,6 +32,23 @@
     navigator.serviceWorker.register('sw.js').catch(function () {});
   }
 
+  function ensureTrainersLink() {
+    const nav = document.querySelector('.nav-list');
+    if (!nav || nav.querySelector('a[href="trainers.html"]')) return;
+    const reportsLink = nav.querySelector('a[href="reports.html"]');
+    const link = document.createElement('a');
+    link.href = 'trainers.html';
+    link.className = 'nav-item';
+    link.innerHTML = '<span class="ic">👤</span> المدربون';
+    if (location.pathname.endsWith('/trainers.html') || location.pathname.endsWith('/trainer.html')) {
+      link.classList.add('active');
+    }
+    if (reportsLink && reportsLink.nextSibling) nav.insertBefore(link, reportsLink.nextSibling);
+    else nav.appendChild(link);
+  }
+
+  ensureTrainersLink();
+
   function setupMobileDrawer() {
     const sidebar = document.querySelector('.sidebar');
     const header = document.querySelector('.app-header');
