@@ -11,6 +11,7 @@
   ensureLink('assets/mobile.css', 'data-mobile-ui');
   ensureLink('assets/professional.css', 'data-professional-ui');
   ensureLink('assets/professional-fixes.css', 'data-professional-fixes');
+  ensureLink('assets/mobile-drawer.css', 'data-mobile-drawer');
 
   if (!document.querySelector('link[rel="manifest"]')) {
     const manifest = document.createElement('link');
