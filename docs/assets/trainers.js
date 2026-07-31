@@ -40,28 +40,41 @@
       return;
     }
 
-    const sorted = trainers.slice().sort(function (a, b) {
+    const byRating = trainers.slice().sort(function (a, b) {
       return (Number(b.avgOverall) || 0) - (Number(a.avgOverall) || 0);
+    });
+    const byWorkshops = trainers.slice().sort(function (a, b) {
+      return (Number(b.workshopCount) || 0) - (Number(a.workshopCount) || 0);
+    });
+    const byParticipants = trainers.slice().sort(function (a, b) {
+      return (Number(b.totalParticipants) || 0) - (Number(a.totalParticipants) || 0);
     });
 
     let html = '<div class="card" style="margin-bottom:16px;">' +
       '<label for="trainerSelect" style="display:block;font-size:13px;font-weight:700;margin-bottom:8px;color:var(--primary-dark);">اختر المدرب</label>' +
       '<select id="trainerSelect" style="width:100%;">' +
       '<option value="">اختر من قائمة المدربين</option>' +
-      sorted.map(function (trainer) {
+      byRating.map(function (trainer) {
         return '<option value="' + escapeHtml(trainer.trainer) + '">' + escapeHtml(trainer.trainer) + '</option>';
       }).join('') +
       '</select></div>';
 
     html += '<div class="kpi-grid">' +
-      kpi(sorted.length, 'إجمالي المدربين') +
-      kpi(sorted.reduce(function (sum, trainer) { return sum + (Number(trainer.workshopCount) || 0); }, 0), 'إجمالي الورش') +
-      kpi(sorted.reduce(function (sum, trainer) { return sum + (Number(trainer.totalParticipants) || 0); }, 0), 'إجمالي المشاركين') +
-      kpi(fmtAvg(average(sorted.map(function (trainer) { return Number(trainer.avgOverall); }))), 'متوسط التقييم') +
+      kpi(byRating.length, 'إجمالي المدربين') +
+      kpi(byRating.reduce(function (sum, trainer) { return sum + (Number(trainer.workshopCount) || 0); }, 0), 'إجمالي الورش') +
+      kpi(byRating.reduce(function (sum, trainer) { return sum + (Number(trainer.totalParticipants) || 0); }, 0), 'إجمالي المشاركين') +
+      kpi(fmtAvg(average(byRating.map(function (trainer) { return Number(trainer.avgOverall); }))), 'متوسط التقييم') +
       '</div>';
 
+    html += '<div class="card"><h3 style="margin-top:0;">🔥 أكثر المدربين نشاطًا</h3>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">' +
+      rankingList('الأكثر تنفيذًا', byWorkshops, function (trainer) { return (trainer.workshopCount || 0) + ' ورشة'; }) +
+      rankingList('الأعلى تقييمًا', byRating, function (trainer) { return fmtAvg(trainer.avgOverall); }) +
+      rankingList('الأكثر مشاركين', byParticipants, function (trainer) { return (trainer.totalParticipants || 0) + ' مشارك'; }) +
+      '</div></div>';
+
     html += '<div class="card"><h3 style="margin-top:0;">جميع المدربين</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;">' +
-      sorted.map(function (trainer, index) {
+      byRating.map(function (trainer, index) {
         return '<a href="trainer.html?name=' + encodeURIComponent(trainer.trainer) + '" style="display:block;text-decoration:none;color:inherit;background:var(--chip-bg);border-radius:16px;padding:15px;border:1px solid var(--border);">' +
           '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">' +
             '<strong style="color:var(--primary-dark);font-size:15px;">' + escapeHtml(trainer.trainer) + '</strong>' +
@@ -82,6 +95,18 @@
     select.addEventListener('change', function () {
       if (select.value) window.location.href = 'trainer.html?name=' + encodeURIComponent(select.value);
     });
+  }
+
+  function rankingList(title, trainers, valueFn) {
+    return '<div style="background:var(--chip-bg);border:1px solid var(--border);border-radius:16px;padding:14px;">' +
+      '<h4 style="margin:0 0 10px;color:var(--primary-dark);font-size:14px;">' + title + '</h4>' +
+      '<ol style="margin:0;padding-inline-start:22px;">' +
+      trainers.slice(0, 5).map(function (trainer) {
+        return '<li style="margin-bottom:8px;font-size:12.5px;">' +
+          '<a href="trainer.html?name=' + encodeURIComponent(trainer.trainer) + '" style="color:var(--primary-dark);font-weight:700;text-decoration:none;">' + escapeHtml(trainer.trainer) + '</a>' +
+          '<span style="color:var(--muted);"> — ' + valueFn(trainer) + '</span></li>';
+      }).join('') +
+      '</ol></div>';
   }
 
   function average(values) {
