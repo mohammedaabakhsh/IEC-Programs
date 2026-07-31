@@ -1,101 +1,79 @@
 (function () {
-  // تحميل طبقة تحسين الجوال مرة واحدة في جميع صفحات النظام.
-  if (!document.querySelector('link[data-mobile-ui]')) {
-    const mobileStyles = document.createElement('link');
-    mobileStyles.rel = 'stylesheet';
-    mobileStyles.href = 'assets/mobile.css';
-    mobileStyles.dataset.mobileUi = 'true';
-    document.head.appendChild(mobileStyles);
+  function ensureLink(href, marker) {
+    if (document.querySelector('link[' + marker + ']')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.setAttribute(marker, 'true');
+    document.head.appendChild(link);
+  }
+
+  ensureLink('assets/mobile.css', 'data-mobile-ui');
+  ensureLink('assets/professional.css', 'data-professional-ui');
+
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = 'manifest.webmanifest';
+    document.head.appendChild(manifest);
+  }
+  let theme = document.querySelector('meta[name="theme-color"]');
+  if (!theme) {
+    theme = document.createElement('meta');
+    theme.name = 'theme-color';
+    document.head.appendChild(theme);
+  }
+  theme.content = '#214c2b';
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
   }
 
   const input = document.getElementById('quickSearchInput');
   const resultsBox = document.getElementById('quickSearchResults');
   if (!input || !resultsBox) return;
 
-  function isConfigured() {
-    return typeof APP_CONFIG !== 'undefined' && APP_CONFIG.API_URL && APP_CONFIG.API_URL.indexOf('PASTE_YOUR') === -1;
-  }
-
-  function escapeHtml_(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char];
+    });
   }
 
   let index = null;
-  let indexLoading = null;
-
+  let loading = null;
   function loadIndex() {
     if (index) return Promise.resolve(index);
-    if (indexLoading) return indexLoading;
-    indexLoading = fetch(APP_CONFIG.API_URL + '?action=searchIndex')
-      .then(res => res.json())
-      .then(json => {
-        if (json.ok) index = json.data;
-        return index;
-      })
-      .catch(() => null);
-    return indexLoading;
+    if (loading) return loading;
+    loading = fetch(APP_CONFIG.API_URL + '?action=searchIndex').then(r => r.json()).then(json => {
+      index = json.ok ? json.data : null;
+      return index;
+    }).catch(() => null);
+    return loading;
   }
 
-  if (isConfigured()) {
-    input.addEventListener('focus', loadIndex, { once: true });
-  }
-
-  function buildResults(query) {
-    if (!index) return [];
+  function matches(value, query) { return String(value || '').toLowerCase().includes(query); }
+  function build(query) {
+    if (!index || !query) return [];
     const q = query.trim().toLowerCase();
-    if (!q) return [];
-
     const results = [];
-
-    index.trainers.forEach(name => {
-      if (name.toLowerCase().indexOf(q) !== -1) {
-        results.push({ icon: '👤', label: name, sub: 'مدرب', url: 'trainer.html?name=' + encodeURIComponent(name) });
-      }
-    });
-
-    index.types.forEach(type => {
-      if (type.toLowerCase().indexOf(q) !== -1) {
-        results.push({ icon: '🏷️', label: type, sub: 'نوع نشاط', url: 'type.html?type=' + encodeURIComponent(type) });
-      }
-    });
-
-    index.workshops.forEach(w => {
-      if (w.name && w.name.toLowerCase().indexOf(q) !== -1) {
-        results.push({ icon: '📋', label: w.name, sub: 'ورشة/برنامج', url: 'workshop.html?id=' + encodeURIComponent(w.id) });
-      }
-    });
-
-    return results.slice(0, 8);
+    (index.workshops || []).forEach(w => { if (matches(w.name, q)) results.push({ label:w.name, sub:'ورشة أو برنامج', url:'workshop.html?id=' + encodeURIComponent(w.id) }); });
+    (index.trainers || []).forEach(name => { if (matches(name, q)) results.push({ label:name, sub:'مدرب', url:'trainer.html?name=' + encodeURIComponent(name) }); });
+    (index.types || []).forEach(type => { if (matches(type, q)) results.push({ label:type, sub:'نوع نشاط', url:'type.html?type=' + encodeURIComponent(type) }); });
+    return results.slice(0,8);
   }
 
-  function render(results) {
-    if (results.length === 0) {
+  function render(items) {
+    if (!items.length) {
       resultsBox.style.display = 'none';
       resultsBox.innerHTML = '';
       return;
     }
-    resultsBox.innerHTML = results.map(r =>
-      '<a href="' + r.url + '" style="display:flex;align-items:center;gap:10px;padding:9px 12px;text-decoration:none;color:var(--primary-dark);font-size:13px;border-bottom:1px solid var(--border);">' +
-      '<span>' + r.icon + '</span>' +
-      '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml_(r.label) + '</span>' +
-      '<span style="font-size:10.5px;color:var(--muted);">' + r.sub + '</span>' +
-      '</a>'
-    ).join('');
+    resultsBox.innerHTML = items.map(item => '<a class="quick-result" href="' + item.url + '"><span>' + escapeHtml(item.label) + '</span><small>' + escapeHtml(item.sub) + '</small></a>').join('');
     resultsBox.style.display = 'block';
   }
 
-  input.addEventListener('input', async () => {
-    await loadIndex();
-    render(buildResults(input.value));
-  });
-
-  document.addEventListener('click', e => {
-    if (e.target !== input && !resultsBox.contains(e.target)) {
-      resultsBox.style.display = 'none';
-    }
-  });
-
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { resultsBox.style.display = 'none'; input.blur(); }
-  });
+  input.addEventListener('focus', loadIndex, { once:true });
+  input.addEventListener('input', async function () { await loadIndex(); render(build(input.value)); });
+  input.addEventListener('keydown', function (event) { if (event.key === 'Escape') { render([]); input.blur(); } });
+  document.addEventListener('click', function (event) { if (event.target !== input && !resultsBox.contains(event.target)) render([]); });
 })();
